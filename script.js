@@ -3,7 +3,7 @@ const DEFAULT_SCORE = 1200;
 const AFRICA_MIN_TAB_COUNT = 300;
 const GALLERY_BATCH_SIZE = 120;
 const FALLBACK_IMG = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
-const POPULARITY_MIN_WITH_SIGNAL = 85;
+const POPULARITY_MIN_WITH_SIGNAL = 120;
 
 const CONTINENT_ORDER = ["world", "africa", "asia", "europe", "north-america", "south-america", "oceania"];
 const CONTINENT_LABEL = {
@@ -743,4 +743,5 @@ async function loadCelebs() {
 
 initCookieBanner();
 loadCelebs();
+
 
