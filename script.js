@@ -172,8 +172,8 @@ function updateQuestionLine() {
   const line = el("questionLine");
   if (!line) return;
   line.textContent = currentGender === "male"
-    ? "Who looks better, left or right?"
-    : "Who looks better, left or right?";
+    ? "Who is more handsome, left or right?"
+    : "Who is more beautiful, left or right?";
 }
 
 function updateModeButtons() {
@@ -783,7 +783,7 @@ function initProfileForm() {
   const setMessage = (text, isError = false) => {
     if (!msg) return;
     msg.textContent = text;
-    msg.style.color = isError ? "#ffb5b0" : "#d7f5e3";
+    msg.style.color = isError ? "#a10f07" : "#16624a";
   };
 
   populateCountryOptions(countryInput);
@@ -1026,4 +1026,3 @@ document.addEventListener("DOMContentLoaded", () => {
   initCookieBanner();
   loadCelebs();
 });
-
