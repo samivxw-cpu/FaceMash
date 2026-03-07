@@ -1,0 +1,32 @@
+﻿[
+  {
+    "name": "Scarlett Johansson",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Scarlett_Johansson.jpg",
+    "region": "america",
+    "score": 1200
+  },
+  {
+    "name": "Zendaya",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/33/Zendaya_2019.jpg",
+    "region": "america",
+    "score": 1200
+  },
+  {
+    "name": "Timothee Chalamet",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Timoth%C3%A9e_Chalamet_2017.jpg",
+    "region": "america",
+    "score": 1200
+  },
+  {
+    "name": "Emma Watson",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/89/Emma_Watson_2013.jpg",
+    "region": "europe",
+    "score": 1200
+  },
+  {
+    "name": "Gal Gadot",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Gal_Gadot_2018.jpg",
+    "region": "middleeast",
+    "score": 1200
+  }
+]

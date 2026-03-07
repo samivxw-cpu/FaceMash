@@ -1,0 +1,46 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FaceMash</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>FaceMash</h1>
+    <p class="subtitle">Choisis le visage le plus attractif, classement Elo en direct.</p>
+
+    <section class="regions">
+      <button type="button" onclick="setRegion('world')">Monde</button>
+      <button type="button" onclick="setRegion('europe')">Europe</button>
+      <button type="button" onclick="setRegion('america')">Amerique</button>
+      <button type="button" onclick="setRegion('latin')">Amerique Latine</button>
+      <button type="button" onclick="setRegion('asia')">Asie</button>
+      <button type="button" onclick="setRegion('africa')">Afrique</button>
+      <button type="button" onclick="setRegion('middleeast')">Moyen-Orient</button>
+      <button type="button" onclick="setRegion('oceania')">Oceanie</button>
+    </section>
+
+    <p id="status" class="status"></p>
+
+    <section class="battle" id="battle">
+      <article class="card" onclick="vote('left')">
+        <img id="imgLeft" alt="Candidat gauche">
+        <h2 id="nameLeft"></h2>
+      </article>
+      <article class="card" onclick="vote('right')">
+        <img id="imgRight" alt="Candidat droite">
+        <h2 id="nameRight"></h2>
+      </article>
+    </section>
+
+    <section class="ranking-wrap">
+      <h3>Top 20</h3>
+      <ol id="ranking"></ol>
+    </section>
+  </main>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
