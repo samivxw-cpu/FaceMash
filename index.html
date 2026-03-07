@@ -3,41 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FaceMash</title>
+  <title>FaceSmash.com</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="container">
-    <h1>FaceMash</h1>
-    <p class="subtitle">Choisis le visage le plus attractif, classement Elo en direct.</p>
+  <header class="topbar">
+    <div class="brand">FaceSmash.com</div>
+    <nav class="topnav">
+      <a href="index.html" class="active">Accueil</a>
+      <a href="author.html">Auteur</a>
+    </nav>
+  </header>
 
-    <section class="regions">
-      <button type="button" onclick="setRegion('world')">Monde</button>
-      <button type="button" onclick="setRegion('europe')">Europe</button>
-      <button type="button" onclick="setRegion('america')">Amerique</button>
-      <button type="button" onclick="setRegion('latin')">Amerique Latine</button>
-      <button type="button" onclick="setRegion('asia')">Asie</button>
-      <button type="button" onclick="setRegion('africa')">Afrique</button>
-      <button type="button" onclick="setRegion('middleeast')">Moyen-Orient</button>
-      <button type="button" onclick="setRegion('oceania')">Oceanie</button>
+  <main class="page">
+    <section class="hero">
+      <h1>Who is hotter? Clique pour voter.</h1>
+      <p>Comparaison stricte par genre: Homme vs Homme, Femme vs Femme.</p>
+      <div class="mode-switch">
+        <button type="button" id="modeFemale" onclick="setGender('female')">Femmes</button>
+        <button type="button" id="modeMale" onclick="setGender('male')">Hommes</button>
+      </div>
+      <p id="status" class="status"></p>
     </section>
 
-    <p id="status" class="status"></p>
-
     <section class="battle" id="battle">
-      <article class="card" onclick="vote('left')">
-        <img id="imgLeft" alt="Candidat gauche">
+      <article class="face-card" onclick="vote('left')">
+        <img id="imgLeft" alt="Portrait 1" loading="lazy">
         <h2 id="nameLeft"></h2>
       </article>
-      <article class="card" onclick="vote('right')">
-        <img id="imgRight" alt="Candidat droite">
+
+      <div class="versus">OR</div>
+
+      <article class="face-card" onclick="vote('right')">
+        <img id="imgRight" alt="Portrait 2" loading="lazy">
         <h2 id="nameRight"></h2>
       </article>
     </section>
 
-    <section class="ranking-wrap">
-      <h3>Top 20</h3>
-      <ol id="ranking"></ol>
+    <section class="rankings">
+      <article class="ranking-panel">
+        <h3>Classement Femmes</h3>
+        <ol id="rankingFemale"></ol>
+      </article>
+      <article class="ranking-panel">
+        <h3>Classement Hommes</h3>
+        <ol id="rankingMale"></ol>
+      </article>
+    </section>
+
+    <section class="gallery-wrap">
+      <div class="gallery-head">
+        <h3>Base celebrites (10 000 profils)</h3>
+        <p id="galleryCount"></p>
+      </div>
+      <div id="gallery" class="gallery"></div>
+      <button type="button" id="loadMoreBtn" class="load-more" onclick="loadMoreGallery()">Charger plus</button>
     </section>
   </main>
 
