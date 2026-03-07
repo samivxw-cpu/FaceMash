@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #f8f1e6;
   --ink: #1d1a17;
   --muted: #5f564a;
@@ -186,7 +186,7 @@ body {
 
 .face-card img {
   width: 100%;
-  height: 430px;
+  height: 440px;
   object-fit: contain;
   display: block;
   background: #fff;
@@ -242,6 +242,49 @@ body {
 .ranking-panel li {
   margin: 6px 0;
   color: #3f382f;
+}
+
+.champion-strip {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.champion-card {
+  border: 1px solid #d6c7af;
+  border-radius: 14px;
+  background: #f6f6f6;
+  padding: 12px;
+}
+
+.champion-card h3 {
+  margin: 0 0 8px;
+}
+
+.champion-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 88px;
+}
+
+.champion-body img {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #cebba0;
+}
+
+.champion-name {
+  font-weight: 700;
+}
+
+.champion-meta {
+  margin: 0;
+  color: #5f564a;
+  font-size: 0.9rem;
 }
 
 .map-wrap,
@@ -311,6 +354,79 @@ body {
 
 .auth-link {
   display: inline-block;
+}
+
+.auth-buttons-brand {
+  margin-bottom: 14px;
+}
+
+.auth-provider {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.auth-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: #fff;
+  color: #111;
+}
+
+.google .auth-icon {
+  color: #db4437;
+  border: 1px solid #db4437;
+}
+
+.apple .auth-icon {
+  color: #111;
+  border: 1px solid #111;
+}
+
+.login-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.92rem;
+}
+
+.login-form input {
+  border: 1px solid #cebba0;
+  border-radius: 10px;
+  padding: 9px 10px;
+  font: inherit;
+  background: #fff;
+}
+
+.link-btn {
+  border: none;
+  background: transparent;
+  color: #8d0e08;
+  text-decoration: underline;
+  cursor: pointer;
+  justify-self: start;
+}
+
+.account-divider {
+  border: none;
+  border-top: 1px solid #e0d3be;
+  margin: 12px 0;
 }
 
 .profile-form {
@@ -448,34 +564,41 @@ body {
 
 @media (max-width: 980px) {
   .battle {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .versus {
-    padding: 2px 0;
+    display: none;
   }
 
   .face-card img {
-    height: 360px;
+    height: 260px;
   }
 
   .rankings,
-  .home-grid {
+  .home-grid,
+  .champion-strip {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 700px) {
   .world-map {
-    min-height: 300px;
+    min-height: 260px;
   }
 
   .spotlight-wrap {
     align-items: flex-start;
   }
 
-  .profile-form {
+  .profile-form,
+  .login-form {
     grid-template-columns: 1fr;
+  }
+
+  .face-card img {
+    height: 220px;
   }
 }
 
@@ -499,7 +622,7 @@ body {
   }
 
   .face-card img {
-    height: 320px;
+    height: 190px;
   }
 
   .cookie-banner {
@@ -507,4 +630,38 @@ body {
     right: 10px;
     bottom: 10px;
   }
+}
+
+
+
+.map-fallback {
+  padding: 12px;
+}
+
+.map-fallback p {
+  margin: 0 0 10px;
+  color: #4f463b;
+}
+
+.country-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.country-btn {
+  border: 1px solid #cebba0;
+  border-radius: 10px;
+  background: #fff;
+  color: #352f28;
+  font: inherit;
+  padding: 7px 9px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.country-btn:hover {
+  border-color: #b8976f;
 }

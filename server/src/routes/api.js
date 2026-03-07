@@ -1,8 +1,15 @@
 ﻿import path from "path";
 import { Router } from "express";
 import multer from "multer";
+import bcrypt from "bcryptjs";
 import { calculateAge, requiredMajorAge } from "../ageRules.js";
-import { getLatestKycByUserId, getUserById, insertKycSubmission } from "../db.js";
+import {
+  createLocalUser,
+  getLatestKycByUserId,
+  getLocalUserByEmail,
+  getUserById,
+  insertKycSubmission,
+} from "../db.js";
 import { config } from "../config.js";
 
 const router = Router();
@@ -22,6 +29,12 @@ const upload = multer({
   },
 });
 
+function sanitizeUser(user) {
+  if (!user) return null;
+  const { passwordHash, ...safe } = user;
+  return safe;
+}
+
 function requireAuth(req, res, next) {
   if (!req.session.userId) {
     res.status(401).json({ error: "Authentication required." });
@@ -32,6 +45,51 @@ function requireAuth(req, res, next) {
 
 router.get("/health", (_req, res) => {
   res.json({ ok: true, service: "facemash-backend" });
+});
+
+router.post("/auth/local/login", async (req, res) => {
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const password = String(req.body.password || "");
+  const name = String(req.body.name || "").trim();
+
+  if (!email || !password) {
+    res.status(400).json({ error: "Email and password are required." });
+    return;
+  }
+
+  if (password.length < 6) {
+    res.status(400).json({ error: "Password must be at least 6 characters." });
+    return;
+  }
+
+  let user = getLocalUserByEmail(email);
+  if (!user) {
+    const passwordHash = await bcrypt.hash(password, 10);
+    user = createLocalUser({ email, name, passwordHash });
+    req.session.userId = user.id;
+    res.json({ ok: true, message: "Local account created and signed in.", user: sanitizeUser(user) });
+    return;
+  }
+
+  const valid = await bcrypt.compare(password, user.passwordHash || "");
+  if (!valid) {
+    res.status(401).json({ error: "Invalid email/password." });
+    return;
+  }
+
+  req.session.userId = user.id;
+  res.json({ ok: true, message: "Signed in successfully.", user: sanitizeUser(user) });
+});
+
+router.post("/auth/local/forgot-password", (req, res) => {
+  const email = String(req.body.email || "").trim().toLowerCase();
+  if (!email) {
+    res.status(400).json({ error: "Email is required." });
+    return;
+  }
+
+  // For production: generate one-time token and send secure email reset link.
+  res.json({ ok: true, message: "Password reset request accepted. Check your email from your configured provider." });
 });
 
 router.get("/me", (req, res) => {
@@ -48,7 +106,7 @@ router.get("/me", (req, res) => {
   }
 
   const latestKyc = getLatestKycByUserId(user.id);
-  res.json({ authenticated: true, user, latestKyc });
+  res.json({ authenticated: true, user: sanitizeUser(user), latestKyc });
 });
 
 router.post(

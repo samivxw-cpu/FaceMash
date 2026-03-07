@@ -1,4 +1,4 @@
-﻿const K = 32;
+const K = 32;
 const DEFAULT_SCORE = 1200;
 const AFRICA_MIN_TAB_COUNT = 300;
 const FALLBACK_IMG = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
@@ -47,6 +47,20 @@ const MAJORITY_BY_COUNTRY = {
   tr: 18,
 };
 
+const FALLBACK_COUNTRIES = [
+  ["us", "United States"],
+  ["gb", "United Kingdom"],
+  ["fr", "France"],
+  ["de", "Germany"],
+  ["it", "Italy"],
+  ["es", "Spain"],
+  ["br", "Brazil"],
+  ["ar", "Argentina"],
+  ["ca", "Canada"],
+  ["in", "India"],
+  ["jp", "Japan"],
+  ["au", "Australia"]
+];
 let celebs = [];
 let currentGender = "male";
 let currentContinent = "world";
@@ -395,6 +409,30 @@ function renderRanking(listId, gender, limit = null) {
   });
 }
 
+function renderChampionCard(containerId, gender) {
+  const box = el(containerId);
+  if (!box) return;
+
+  const body = box.querySelector(".champion-body");
+  if (!body) return;
+
+  const sorted = sortedPool(gender);
+  const top = sorted[0];
+
+  if (!top) {
+    body.innerHTML = "<p class=\"champion-meta\">No data yet.</p>";
+    return;
+  }
+
+  body.innerHTML = `
+    <img src="${top.image}" alt="${top.name}" loading="lazy">
+    <div>
+      <p class="champion-name">${top.name}</p>
+      <p class="champion-meta">${countryCodeToFlag(top.countryCode)} ${top.countryName || ""}</p>
+    </div>
+  `;
+}
+
 function updateTopRankings() {
   const label = CONTINENT_LABEL[currentContinent] || "World";
 
@@ -405,6 +443,8 @@ function updateTopRankings() {
 
   renderRanking("rankingMaleTop", "male", 10);
   renderRanking("rankingFemaleTop", "female", 10);
+  renderChampionCard("maleChampion", "male");
+  renderChampionCard("femaleChampion", "female");
 }
 
 function renderFullRankings() {
@@ -417,6 +457,8 @@ function renderFullRankings() {
 
   renderRanking("rankingMaleFull", "male");
   renderRanking("rankingFemaleFull", "female");
+  renderChampionCard("maleChampion", "male");
+  renderChampionCard("femaleChampion", "female");
 }
 
 function topForCountry(countryCode) {
@@ -591,6 +633,39 @@ function renderGoogleGeoChart(mapEl) {
   return true;
 }
 
+function renderCountryListFallback(mapEl) {
+  const byCountry = new Map();
+  celebs.forEach((c) => {
+    if (!c.countryCode || !c.countryName) return;
+    if (!byCountry.has(c.countryCode)) byCountry.set(c.countryCode, c.countryName);
+  });
+
+  const countries = [...byCountry.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  if (!countries.length) {
+    mapEl.innerHTML = "<p>The world map failed to load and no country data is available.</p>";
+    return;
+  }
+
+  mapEl.innerHTML = `
+    <div class="map-fallback">
+      <p>Interactive world map unavailable. Select a country below.</p>
+      <div id="countryGridFallback" class="country-grid"></div>
+    </div>
+  `;
+
+  const grid = el("countryGridFallback");
+  if (!grid) return;
+
+  countries.forEach(([code, name]) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "country-btn";
+    btn.textContent = `${countryCodeToFlag(code)} ${name}`.trim();
+    btn.onclick = () => renderCountrySpotlight(code);
+    grid.appendChild(btn);
+  });
+}
+
 function resolveMapName() {
   const maps = window.jsVectorMap && window.jsVectorMap.maps ? window.jsVectorMap.maps : {};
   const preferred = ["world_merc", "world", "worldMill", "world_mill"];
@@ -658,7 +733,8 @@ async function initWorldMap() {
     if (drawn) return;
   }
 
-  mapEl.innerHTML = "<p>The world map failed to load.</p>";
+  renderCountryListFallback(mapEl);
+  setStatus("Interactive map libraries unavailable. Fallback country selector loaded.");
 }
 
 function calculateAge(dateString) {
@@ -686,14 +762,23 @@ function populateCountryOptions(selectEl) {
   });
 
   const options = [...byCode.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  const sourceOptions = options.length ? options : FALLBACK_COUNTRIES;
   selectEl.innerHTML = "";
 
-  options.forEach(([code, name]) => {
+  sourceOptions.forEach(([code, name]) => {
     const option = document.createElement("option");
     option.value = code;
     option.textContent = name;
     selectEl.appendChild(option);
   });
+}
+
+function initAuthProviderLinks() {
+  const googleSignup = el("googleSignup");
+  const appleSignup = el("appleSignup");
+
+  if (googleSignup) googleSignup.href = apiUrl("/auth/google");
+  if (appleSignup) appleSignup.href = apiUrl("/auth/apple");
 }
 
 function initProfileForm() {
@@ -714,6 +799,11 @@ function initProfileForm() {
   const msg = el("profileMsg");
   const googleSignup = el("googleSignup");
   const appleSignup = el("appleSignup");
+
+  const loginForm = el("loginForm");
+  const loginEmail = el("loginEmail");
+  const loginPassword = el("loginPassword");
+  const forgotPasswordBtn = el("forgotPasswordBtn");
 
   if (googleSignup) googleSignup.href = apiUrl("/auth/google");
   if (appleSignup) appleSignup.href = apiUrl("/auth/apple");
@@ -764,12 +854,12 @@ function initProfileForm() {
 
       const data = await response.json();
       if (!data.authenticated) {
-        setMessage("Please sign in with Google or Apple before KYC submit.", true);
         return false;
       }
 
       if (data.user?.name && !nameInput.value) nameInput.value = data.user.name;
       if (data.user?.email && !emailInput.value) emailInput.value = data.user.email;
+      if (data.user?.email && loginEmail && !loginEmail.value) loginEmail.value = data.user.email;
 
       const kycState = data.latestKyc ? ` | Latest KYC: ${data.latestKyc.status}` : "";
       setMessage(`Signed in as ${data.user?.email || data.user?.name || "user"}${kycState}`);
@@ -781,6 +871,68 @@ function initProfileForm() {
   };
 
   refreshAuthState();
+
+  if (loginForm && loginEmail && loginPassword) {
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      try {
+        const response = await fetch(apiUrl("/api/auth/local/login"), {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: loginEmail.value.trim(),
+            password: loginPassword.value,
+            name: nameInput.value.trim(),
+          }),
+        });
+
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setMessage(result.error || "Login failed.", true);
+          return;
+        }
+
+        setMessage(result.message || "Signed in successfully.");
+        await refreshAuthState();
+      } catch {
+        setMessage("Could not reach local login endpoint.", true);
+      }
+    });
+  }
+
+  if (forgotPasswordBtn) {
+    forgotPasswordBtn.addEventListener("click", async () => {
+      const email = (loginEmail?.value || emailInput.value || "").trim();
+      if (!email) {
+        setMessage("Enter your email first for password reset.", true);
+        return;
+      }
+
+      try {
+        const response = await fetch(apiUrl("/api/auth/local/forgot-password"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        });
+
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setMessage(result.error || "Forgot password request failed.", true);
+          return;
+        }
+
+        setMessage(result.message || "Password reset request accepted.");
+      } catch {
+        setMessage("Could not reach forgot-password endpoint.", true);
+      }
+    });
+  }
 
   photoInput.addEventListener("change", () => {
     const file = photoInput.files && photoInput.files[0];
@@ -817,7 +969,10 @@ function initProfileForm() {
     }
 
     const isAuthenticated = await refreshAuthState();
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      setMessage("Please sign in first (Google, Apple, or email/password).", true);
+      return;
+    }
 
     const payload = new FormData();
     payload.append("fullName", nameInput.value.trim());
@@ -1003,9 +1158,15 @@ async function loadCelebs() {
   } catch (error) {
     setStatus(`Could not load celebs.json (${error.message})`);
     clearBattle();
+
+    if (has("worldMap")) {
+      const mapEl = el("worldMap");
+      if (mapEl) renderCountryListFallback(mapEl);
+    }
+
+    if (has("profileForm")) initProfileForm();
   }
 }
-
 window.acceptCookies = acceptCookies;
 window.rejectCookies = rejectCookies;
 window.setGender = setGender;
@@ -1013,9 +1174,26 @@ window.setContinent = setContinent;
 window.vote = vote;
 
 document.addEventListener("DOMContentLoaded", () => {
+  initAuthProviderLinks();
   initCookieBanner();
   loadCelebs();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

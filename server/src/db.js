@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT,
   name TEXT,
   avatar_url TEXT,
+  password_hash TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(provider, provider_sub)
 );
@@ -34,6 +35,12 @@ CREATE TABLE IF NOT EXISTS kyc_submissions (
 );
 `);
 
+try {
+  db.exec("ALTER TABLE users ADD COLUMN password_hash TEXT");
+} catch {
+  // column already exists
+}
+
 const upsertUserStmt = db.prepare(`
   INSERT INTO users (provider, provider_sub, email, name, avatar_url)
   VALUES (@provider, @providerSub, @email, @name, @avatarUrl)
@@ -43,16 +50,27 @@ const upsertUserStmt = db.prepare(`
     avatar_url = excluded.avatar_url
 `);
 
+const insertLocalUserStmt = db.prepare(`
+  INSERT INTO users (provider, provider_sub, email, name, password_hash, avatar_url)
+  VALUES ('local', @email, @email, @name, @passwordHash, '')
+`);
+
 const findUserStmt = db.prepare(`
-  SELECT id, provider, provider_sub AS providerSub, email, name, avatar_url AS avatarUrl, created_at AS createdAt
+  SELECT id, provider, provider_sub AS providerSub, email, name, avatar_url AS avatarUrl, password_hash AS passwordHash, created_at AS createdAt
   FROM users
   WHERE provider = ? AND provider_sub = ?
 `);
 
 const findUserByIdStmt = db.prepare(`
-  SELECT id, provider, provider_sub AS providerSub, email, name, avatar_url AS avatarUrl, created_at AS createdAt
+  SELECT id, provider, provider_sub AS providerSub, email, name, avatar_url AS avatarUrl, password_hash AS passwordHash, created_at AS createdAt
   FROM users
   WHERE id = ?
+`);
+
+const findLocalByEmailStmt = db.prepare(`
+  SELECT id, provider, provider_sub AS providerSub, email, name, avatar_url AS avatarUrl, password_hash AS passwordHash, created_at AS createdAt
+  FROM users
+  WHERE provider = 'local' AND provider_sub = ?
 `);
 
 const insertKycStmt = db.prepare(`
@@ -96,6 +114,23 @@ export function upsertUser(user) {
 
 export function getUserById(id) {
   return findUserByIdStmt.get(id);
+}
+
+export function getLocalUserByEmail(email) {
+  return findLocalByEmailStmt.get(String(email || "").toLowerCase());
+}
+
+export function createLocalUser({ email, name, passwordHash }) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const displayName = String(name || "").trim() || normalizedEmail;
+
+  insertLocalUserStmt.run({
+    email: normalizedEmail,
+    name: displayName,
+    passwordHash,
+  });
+
+  return getLocalUserByEmail(normalizedEmail);
 }
 
 export function insertKycSubmission(payload) {

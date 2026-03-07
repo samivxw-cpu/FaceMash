@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "facemash-backend",
   "version": "1.0.0",
   "private": true,
@@ -8,6 +8,7 @@
     "start": "node src/index.js"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
