@@ -13,7 +13,7 @@
   <meta property="og:url" content="https://samivxw-cpu.github.io/FaceMash/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="FaceMash">
-  <meta name="twitter:description" content="Compare celebrities and rank them live with Elo.">
+  <meta name="twitter:description" content="Compare celebrities and rank them live.">
   <meta name="twitter:image" content="https://samivxw-cpu.github.io/FaceMash/logo.svg">
   <script type="application/ld+json">
   {
@@ -25,40 +25,42 @@
     "image": "https://samivxw-cpu.github.io/FaceMash/logo.svg",
     "author": {
       "@type": "Person",
-      "name": "Sami Benabdelmalek"
+      "name": "Benabdelmalek Sami"
     }
   }
   </script>
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="apple-touch-icon" href="logo.svg">
   <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="index.html" aria-label="FaceMash home">
-      <img src="logo.svg" alt="FaceMash logo" class="logo" width="44" height="44">
-      <span>FaceMash</span>
-    </a>
+    <div class="topbar-inner">
+      <a class="brand" href="index.html" aria-label="FaceMash home">
+        <img src="logo.svg" alt="FaceMash logo" class="logo" width="40" height="40">
+        <span>FaceMash</span>
+      </a>
+
+      <nav class="header-tabs" aria-label="Main tabs">
+        <button type="button" id="tabBattle" class="tab-btn" onclick="setView('battle')">Battle</button>
+        <button type="button" id="tabRanking" class="tab-btn" onclick="setView('ranking')">Ranking</button>
+      </nav>
+    </div>
   </header>
 
   <main class="page">
     <section class="hero">
-      <h1>Who is hotter? Click to vote.</h1>
+      <h1>Pick the profile you prefer.</h1>
       <p class="subline" id="questionLine">Who is more handsome, left or right?</p>
 
-      <div class="mode-switch">
-        <button type="button" id="modeMale" onclick="setGender('male')">Men</button>
-        <button type="button" id="modeFemale" onclick="setGender('female')">Women</button>
+      <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
+        <button type="button" id="modeMale" class="chip-btn" onclick="setGender('male')">Men</button>
+        <button type="button" id="modeFemale" class="chip-btn" onclick="setGender('female')">Women</button>
       </div>
 
-      <div class="continent-switch" id="continentTabs" aria-label="continent tabs"></div>
-
-      <div class="view-switch">
-        <button type="button" id="tabBattle" onclick="setView('battle')">Battle</button>
-        <button type="button" id="tabRanking" onclick="setView('ranking')">Ranking</button>
-      </div>
-
+      <div class="filter-tabs" id="continentTabs" role="tablist" aria-label="Continent tabs"></div>
       <p id="status" class="status"></p>
     </section>
 
@@ -88,36 +90,114 @@
           <ol id="rankingFemaleTop"></ol>
         </article>
       </section>
-
-      <section class="gallery-wrap">
-        <div class="gallery-head">
-          <h3 id="galleryTitle">Living Celebrities</h3>
-          <p id="galleryCount"></p>
-        </div>
-        <div id="gallery" class="gallery"></div>
-        <button type="button" id="loadMoreBtn" class="load-more" onclick="loadMoreGallery()">Load more</button>
-      </section>
     </section>
 
     <section id="rankingView" class="hidden">
       <section class="rankings full-rankings">
         <article class="ranking-panel">
-          <h3 id="maleRankingTitle">Men Ranking</h3>
+          <h3 id="maleRankingTitle">Full Men Ranking</h3>
           <ol id="rankingMaleFull"></ol>
         </article>
 
         <article class="ranking-panel">
-          <h3 id="femaleRankingTitle">Women Ranking</h3>
+          <h3 id="femaleRankingTitle">Full Women Ranking</h3>
           <ol id="rankingFemaleFull"></ol>
         </article>
       </section>
     </section>
+
+    <section class="map-wrap">
+      <div class="map-head">
+        <h3>Global FaceMap</h3>
+        <p>Click a country to see its current top profile.</p>
+      </div>
+      <div id="worldMap" class="world-map" aria-label="World map"></div>
+      <article id="countrySpotlight" class="country-spotlight">
+        <p>Select a country on the map.</p>
+      </article>
+    </section>
+
+    <section class="gallery-wrap">
+      <div class="gallery-head">
+        <h3 id="galleryTitle">Living Celebrity Gallery</h3>
+        <p id="galleryCount"></p>
+      </div>
+      <div id="gallery" class="gallery"></div>
+      <button type="button" id="loadMoreBtn" class="load-more" onclick="loadMoreGallery()">Load more</button>
+    </section>
+
+    <section class="account-wrap">
+      <div class="account-head">
+        <h3>FaceMash by Benabdelmalek Sami</h3>
+        <p>Create your profile and eligibility info.</p>
+      </div>
+
+      <div class="auth-buttons">
+        <button type="button" id="googleSignup" class="chip-btn">Continue with Google</button>
+        <button type="button" id="appleSignup" class="chip-btn">Continue with Apple</button>
+      </div>
+
+      <form id="profileForm" class="profile-form" novalidate>
+        <label>
+          Full name
+          <input type="text" id="profileName" required>
+        </label>
+
+        <label>
+          Email
+          <input type="email" id="profileEmail" required>
+        </label>
+
+        <label>
+          Date of birth
+          <input type="date" id="profileBirth" required>
+        </label>
+
+        <label>
+          Relationship status
+          <select id="profileRelation" required>
+            <option value="single">Single</option>
+            <option value="in_relationship">In a relationship</option>
+            <option value="married">Married</option>
+          </select>
+        </label>
+
+        <label>
+          Country
+          <select id="profileCountry" required></select>
+        </label>
+
+        <label>
+          Best photo
+          <input type="file" id="profilePhoto" accept="image/*">
+        </label>
+
+        <button type="submit" class="chip-btn profile-submit">Save profile</button>
+      </form>
+
+      <p id="profileMsg" class="profile-msg"></p>
+      <img id="profilePreview" class="profile-preview hidden" alt="Profile preview">
+    </section>
   </main>
 
   <footer class="site-footer">
-    <p><strong>Sami Benabdelmalek</strong> • Created in 2026</p>
+    <div class="footer-inner">
+      <span>FaceMash by Benabdelmalek Sami</span>
+      <a href="#" id="cookieSettingsLink">Cookies</a>
+      <span>Created in 2026</span>
+    </div>
   </footer>
 
+  <section id="cookieBanner" class="cookie-banner hidden" aria-live="polite">
+    <p>FaceMash uses cookies to save preferences and improve your experience.</p>
+    <div class="cookie-actions">
+      <button type="button" id="cookieReject" class="cookie-btn secondary">Reject</button>
+      <button type="button" id="cookieAccept" class="cookie-btn primary">Accept all</button>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js"></script>
   <script src="script.js" defer></script>
 </body>
 </html>

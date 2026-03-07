@@ -3,6 +3,7 @@ const DEFAULT_SCORE = 1200;
 const MIN_TAB_COUNT = 300;
 const GALLERY_BATCH_SIZE = 120;
 const FALLBACK_IMG = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
+const CONSENT_KEY = "facemash_cookie_consent";
 
 const CONTINENT_ORDER = ["africa", "asia", "europe", "north-america", "south-america", "oceania"];
 const CONTINENT_LABEL = {
@@ -23,6 +24,10 @@ let left = null;
 let right = null;
 let galleryCursor = 0;
 let galleryData = [];
+let rankingsDirty = true;
+let worldMap = null;
+let selectedCountryCode = null;
+let profileInitialized = false;
 
 function expectedScore(a, b) {
   return 1 / (1 + Math.pow(10, (b - a) / 400));
@@ -62,6 +67,12 @@ function normalizeContinent(value) {
   return null;
 }
 
+function normalizeCountryCode(value) {
+  if (!value) return null;
+  const code = String(value).trim().toLowerCase();
+  return code.length === 2 ? code : null;
+}
+
 function setImage(imgEl, url) {
   imgEl.onerror = () => {
     imgEl.onerror = null;
@@ -76,6 +87,10 @@ function setView(view) {
   document.getElementById("rankingView").classList.toggle("hidden", view !== "ranking");
   document.getElementById("tabBattle").classList.toggle("active", view === "battle");
   document.getElementById("tabRanking").classList.toggle("active", view === "ranking");
+
+  if (view === "ranking" && rankingsDirty) {
+    renderFullRankings();
+  }
 }
 
 function getPool(gender = currentGender, continent = currentContinent) {
@@ -129,12 +144,17 @@ function buildContinentTabs() {
     return true;
   });
 
+  if (!availableContinents.length) {
+    availableContinents = CONTINENT_ORDER.filter((continent) => (counts.get(continent) || 0) > 0);
+  }
+
   const tabs = document.getElementById("continentTabs");
   tabs.innerHTML = "";
 
   availableContinents.forEach((continent) => {
     const btn = document.createElement("button");
     btn.type = "button";
+    btn.className = "chip-btn";
     btn.dataset.continent = continent;
     btn.textContent = CONTINENT_LABEL[continent] || continent;
     btn.onclick = () => setContinent(continent);
@@ -158,23 +178,29 @@ function clearBattle() {
   document.getElementById("nameRight").textContent = "-";
 }
 
-function pickTwo(pool) {
-  const leftIndex = Math.floor(Math.random() * pool.length);
-  let rightIndex = Math.floor(Math.random() * pool.length);
-
-  while (rightIndex === leftIndex) {
-    rightIndex = Math.floor(Math.random() * pool.length);
-  }
-
-  return [pool[leftIndex], pool[rightIndex]];
+function pickRandom(pool, excludeIds = []) {
+  const candidates = pool.filter((p) => !excludeIds.includes(p.id));
+  if (!candidates.length) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-function nextRound() {
+function renderPair() {
+  if (!left || !right) {
+    clearBattle();
+    return;
+  }
+
+  setImage(document.getElementById("imgLeft"), left.image);
+  setImage(document.getElementById("imgRight"), right.image);
+  document.getElementById("nameLeft").textContent = left.name;
+  document.getElementById("nameRight").textContent = right.name;
+}
+
+function startFreshRound() {
   ensureValidContinentForCurrentGender();
   updateContinentButtons();
 
   const pool = getPool();
-
   if (pool.length < 2) {
     setStatus("Not enough profiles for this mode.");
     clearBattle();
@@ -182,12 +208,35 @@ function nextRound() {
   }
 
   setStatus("");
-  [left, right] = pickTwo(pool);
+  left = pickRandom(pool);
+  right = pickRandom(pool, [left.id]);
+  renderPair();
+}
 
-  setImage(document.getElementById("imgLeft"), left.image);
-  setImage(document.getElementById("imgRight"), right.image);
-  document.getElementById("nameLeft").textContent = left.name;
-  document.getElementById("nameRight").textContent = right.name;
+function continueRoundKeepingWinner(side) {
+  const pool = getPool();
+  if (pool.length < 2) {
+    startFreshRound();
+    return;
+  }
+
+  if (side === "left") {
+    right = pickRandom(pool, [left.id]);
+    if (!right) {
+      startFreshRound();
+      return;
+    }
+  }
+
+  if (side === "right") {
+    left = pickRandom(pool, [right.id]);
+    if (!left) {
+      startFreshRound();
+      return;
+    }
+  }
+
+  renderPair();
 }
 
 function setGender(gender) {
@@ -196,61 +245,89 @@ function setGender(gender) {
   updateQuestionLine();
   ensureValidContinentForCurrentGender();
   updateContinentButtons();
-  updateRankings();
+
+  rankingsDirty = true;
+  updateTopRankings();
+  if (currentView === "ranking") renderFullRankings();
+
   initGallery();
-  nextRound();
+  startFreshRound();
+
+  if (selectedCountryCode) {
+    renderCountrySpotlight(selectedCountryCode);
+  }
 }
 
 function setContinent(continent) {
   currentContinent = continent;
   ensureValidContinentForCurrentGender();
   updateContinentButtons();
-  updateRankings();
+
+  rankingsDirty = true;
+  updateTopRankings();
+  if (currentView === "ranking") renderFullRankings();
+
   initGallery();
-  nextRound();
+  startFreshRound();
 }
 
 function vote(side) {
   if (!left || !right) return;
 
-  if (side === "left") updateElo(left, right);
-  if (side === "right") updateElo(right, left);
+  if (side === "left") {
+    updateElo(left, right);
+    continueRoundKeepingWinner("left");
+  }
 
-  updateRankings();
-  nextRound();
+  if (side === "right") {
+    updateElo(right, left);
+    continueRoundKeepingWinner("right");
+  }
+
+  rankingsDirty = true;
+  updateTopRankings();
+  if (currentView === "ranking") renderFullRankings();
+
+  if (selectedCountryCode) {
+    renderCountrySpotlight(selectedCountryCode);
+  }
 }
 
-function renderRanking(listId, gender, limit) {
+function sortedPool(gender) {
+  return [...getPool(gender, currentContinent)].sort((a, b) => b.score - a.score);
+}
+
+function renderRanking(listId, gender, limit = null) {
   const list = document.getElementById(listId);
   list.innerHTML = "";
 
-  const sorted = getPool(gender, currentContinent)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+  const sorted = sortedPool(gender);
+  const subset = limit ? sorted.slice(0, limit) : sorted;
 
-  sorted.forEach((c, i) => {
+  subset.forEach((c) => {
     const li = document.createElement("li");
-    li.textContent = `${i + 1}. ${c.name}`;
+    li.textContent = c.name;
     list.appendChild(li);
   });
 }
 
-function updateRankings() {
+function updateTopRankings() {
   const label = CONTINENT_LABEL[currentContinent] || "Continent";
-
   document.getElementById("maleTopTitle").textContent = `Top 10 Men - ${label}`;
   document.getElementById("femaleTopTitle").textContent = `Top 10 Women - ${label}`;
-  document.getElementById("maleRankingTitle").textContent = `Full Men Ranking - ${label}`;
-  document.getElementById("femaleRankingTitle").textContent = `Full Women Ranking - ${label}`;
 
   renderRanking("rankingMaleTop", "male", 10);
   renderRanking("rankingFemaleTop", "female", 10);
-  renderRanking("rankingMaleFull", "male", 5000);
-  renderRanking("rankingFemaleFull", "female", 5000);
 }
 
-function getGalleryData() {
-  return galleryData;
+function renderFullRankings() {
+  const label = CONTINENT_LABEL[currentContinent] || "Continent";
+  document.getElementById("maleRankingTitle").textContent = `Full Men Ranking - ${label}`;
+  document.getElementById("femaleRankingTitle").textContent = `Full Women Ranking - ${label}`;
+
+  renderRanking("rankingMaleFull", "male", null);
+  renderRanking("rankingFemaleFull", "female", null);
+  rankingsDirty = false;
 }
 
 function buildGalleryCard(person) {
@@ -267,7 +344,7 @@ function buildGalleryCard(person) {
 
   const meta = document.createElement("p");
   const genderLabel = person.gender === "male" ? "Man" : "Woman";
-  meta.textContent = `${genderLabel} • ${CONTINENT_LABEL[person.continent] || person.continent}`;
+  meta.textContent = `${genderLabel} • ${person.countryName || CONTINENT_LABEL[person.continent] || person.continent}`;
 
   card.appendChild(img);
   card.appendChild(title);
@@ -277,19 +354,18 @@ function buildGalleryCard(person) {
 }
 
 function loadMoreGallery() {
-  const data = getGalleryData();
   const gallery = document.getElementById("gallery");
   const start = galleryCursor;
-  const end = Math.min(start + GALLERY_BATCH_SIZE, data.length);
+  const end = Math.min(start + GALLERY_BATCH_SIZE, galleryData.length);
 
   for (let i = start; i < end; i += 1) {
-    gallery.appendChild(buildGalleryCard(data[i]));
+    gallery.appendChild(buildGalleryCard(galleryData[i]));
   }
 
   galleryCursor = end;
 
   const btn = document.getElementById("loadMoreBtn");
-  if (galleryCursor >= data.length) {
+  if (galleryCursor >= galleryData.length) {
     btn.disabled = true;
     btn.textContent = "Everything loaded";
   }
@@ -305,19 +381,171 @@ function initGallery() {
       return a.name.localeCompare(b.name);
     });
 
-  document.getElementById("gallery").innerHTML = "";
-  document.getElementById("loadMoreBtn").disabled = false;
-  document.getElementById("loadMoreBtn").textContent = "Load more";
+  const gallery = document.getElementById("gallery");
+  const btn = document.getElementById("loadMoreBtn");
+
+  gallery.innerHTML = "";
+  btn.disabled = false;
+  btn.textContent = "Load more";
 
   const total = galleryData.length;
   const men = galleryData.filter((c) => c.gender === "male").length;
   const women = galleryData.filter((c) => c.gender === "female").length;
   const label = CONTINENT_LABEL[currentContinent] || "Continent";
 
-  document.getElementById("galleryTitle").textContent = `Living Celebrities - ${label}`;
+  document.getElementById("galleryTitle").textContent = `Living Celebrity Gallery - ${label}`;
   document.getElementById("galleryCount").textContent = `${total} profiles • ${men} men • ${women} women`;
 
   loadMoreGallery();
+}
+
+function countryCodeToFlag(code) {
+  if (!code || code.length !== 2) return "";
+  return code
+    .toUpperCase()
+    .split("")
+    .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
+    .join("");
+}
+
+function topForCountry(countryCode) {
+  const filtered = celebs.filter((c) => c.countryCode === countryCode && c.gender === currentGender);
+  if (filtered.length) {
+    return [...filtered].sort((a, b) => b.score - a.score)[0];
+  }
+
+  const fallback = celebs.filter((c) => c.countryCode === countryCode);
+  if (!fallback.length) return null;
+  return [...fallback].sort((a, b) => b.score - a.score)[0];
+}
+
+function renderCountrySpotlight(countryCode) {
+  selectedCountryCode = countryCode;
+  const container = document.getElementById("countrySpotlight");
+  const top = topForCountry(countryCode);
+
+  if (!top) {
+    container.innerHTML = `<p>No profile data for ${countryCode.toUpperCase()} yet.</p>`;
+    return;
+  }
+
+  const flag = countryCodeToFlag(countryCode);
+  const genderLabel = top.gender === "male" ? "Man" : "Woman";
+  container.innerHTML = `
+    <div class="spotlight-wrap">
+      <img src="${top.image}" alt="${top.name}" class="spotlight-img" loading="lazy">
+      <div class="spotlight-meta">
+        <h4>${flag} ${top.countryName || top.countryCode.toUpperCase()}</h4>
+        <p><strong>${top.name}</strong></p>
+        <p>Top profile (${genderLabel})</p>
+      </div>
+    </div>
+  `;
+}
+
+function updateMapValues() {
+  if (!worldMap || !worldMap.series || !worldMap.series.regions[0]) return;
+
+  const values = {};
+  celebs.forEach((c) => {
+    if (!c.countryCode) return;
+    const key = c.countryCode.toUpperCase();
+    values[key] = (values[key] || 0) + 1;
+  });
+
+  worldMap.series.regions[0].setValues(values);
+}
+
+function initWorldMap() {
+  const mapEl = document.getElementById("worldMap");
+
+  if (!window.jsVectorMap || !window.jsVectorMap.maps || !window.jsVectorMap.maps.world) {
+    mapEl.innerHTML = "<p>World map failed to load.</p>";
+    return;
+  }
+
+  worldMap = new jsVectorMap({
+    selector: "#worldMap",
+    map: "world",
+    zoomOnScroll: true,
+    regionStyle: {
+      initial: {
+        fill: "#ecdcc7",
+        stroke: "#cfb99b",
+        strokeWidth: 0.7,
+      },
+      hover: {
+        fill: "#d88d80",
+      },
+      selected: {
+        fill: "#b5140c",
+      },
+    },
+    series: {
+      regions: [{
+        attribute: "fill",
+        scale: ["#f4e7d5", "#b5140c"],
+        values: {},
+        normalizeFunction: "polynomial",
+      }],
+    },
+    onRegionClick: (event, code) => {
+      event.preventDefault();
+      const cc = code.toLowerCase();
+      renderCountrySpotlight(cc);
+    },
+  });
+
+  updateMapValues();
+}
+
+function setCookie(name, value, days) {
+  const maxAge = days * 24 * 60 * 60;
+  document.cookie = `${name}=${value}; max-age=${maxAge}; path=/; SameSite=Lax`;
+}
+
+function getCookie(name) {
+  const target = `${name}=`;
+  const parts = document.cookie.split(";");
+  for (const p of parts) {
+    const trimmed = p.trim();
+    if (trimmed.startsWith(target)) {
+      return trimmed.substring(target.length);
+    }
+  }
+  return null;
+}
+
+function getConsent() {
+  return localStorage.getItem(CONSENT_KEY) || getCookie(CONSENT_KEY);
+}
+
+function applyConsent(choice) {
+  localStorage.setItem(CONSENT_KEY, choice);
+  setCookie(CONSENT_KEY, choice, 365);
+  document.getElementById("cookieBanner").classList.add("hidden");
+}
+
+function openCookieBanner() {
+  document.getElementById("cookieBanner").classList.remove("hidden");
+}
+
+function initCookies() {
+  const banner = document.getElementById("cookieBanner");
+  const acceptBtn = document.getElementById("cookieAccept");
+  const rejectBtn = document.getElementById("cookieReject");
+  const settingsLink = document.getElementById("cookieSettingsLink");
+
+  acceptBtn.addEventListener("click", () => applyConsent("accepted"));
+  rejectBtn.addEventListener("click", () => applyConsent("rejected"));
+  settingsLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    openCookieBanner();
+  });
+
+  if (!getConsent()) {
+    banner.classList.remove("hidden");
+  }
 }
 
 async function loadCelebs() {
@@ -326,19 +554,28 @@ async function loadCelebs() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const raw = await response.json();
+    const seen = new Set();
+
     celebs = raw
       .map((item, index) => {
         const gender = normalizeGender(item.gender);
         const continent = normalizeContinent(item.continent || item.continentLabel || item.region);
+        const countryCode = normalizeCountryCode(item.countryCode);
+        const id = item.id || `c${index + 1}`;
 
+        if (seen.has(id)) return null;
         if (!gender || !continent || !item.name || !item.image) return null;
 
+        seen.add(id);
+
         return {
-          id: item.id || `c${index + 1}`,
-          name: item.name,
+          id,
+          name: String(item.name),
           image: String(item.image).replace(/^http:/, "https:"),
           gender,
           continent,
+          countryCode,
+          countryName: item.countryName || "",
           score: Number.isFinite(item.score) ? item.score : DEFAULT_SCORE,
         };
       })
@@ -353,15 +590,168 @@ async function loadCelebs() {
     buildContinentTabs();
     updateModeButtons();
     updateQuestionLine();
-    updateRankings();
+
+    rankingsDirty = true;
+    updateTopRankings();
+    if (currentView === "ranking") renderFullRankings();
+
     initGallery();
     setView("battle");
-    nextRound();
+    startFreshRound();
+
+    initProfileForm();
+    initWorldMap();
   } catch (error) {
     setStatus(`Could not load celebs.json (${error.message})`);
     clearBattle();
   }
 }
 
+const MAJORITY_BY_COUNTRY = {
+  fr: 18,
+  us: 18,
+  ca: 18,
+  gb: 18,
+  de: 18,
+  it: 18,
+  es: 18,
+  jp: 18,
+  kr: 19,
+  ch: 18,
+  sa: 18,
+  ae: 18,
+  in: 18,
+  br: 18,
+  ru: 18,
+  cn: 18,
+  tr: 18,
+};
+
+function calculateAge(dateString) {
+  const birth = new Date(dateString);
+  if (Number.isNaN(birth.getTime())) return 0;
+
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+    age -= 1;
+  }
+  return age;
+}
+
+function requiredMajorAge(countryCode) {
+  if (!countryCode) return 18;
+  return MAJORITY_BY_COUNTRY[countryCode] || 18;
+}
+
+function populateCountryOptions(selectEl) {
+  const byCode = new Map();
+
+  celebs.forEach((c) => {
+    if (!c.countryCode || !c.countryName) return;
+    if (!byCode.has(c.countryCode)) {
+      byCode.set(c.countryCode, c.countryName);
+    }
+  });
+
+  const options = [...byCode.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  selectEl.innerHTML = "";
+
+  options.forEach(([code, name]) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = name;
+    selectEl.appendChild(opt);
+  });
+}
+
+function initProfileForm() {
+  if (profileInitialized) return;
+  profileInitialized = true;
+
+  const form = document.getElementById("profileForm");
+  const nameInput = document.getElementById("profileName");
+  const emailInput = document.getElementById("profileEmail");
+  const birthInput = document.getElementById("profileBirth");
+  const relationInput = document.getElementById("profileRelation");
+  const countryInput = document.getElementById("profileCountry");
+  const photoInput = document.getElementById("profilePhoto");
+  const preview = document.getElementById("profilePreview");
+  const msg = document.getElementById("profileMsg");
+
+  const googleBtn = document.getElementById("googleSignup");
+  const appleBtn = document.getElementById("appleSignup");
+
+  populateCountryOptions(countryInput);
+
+  const saved = localStorage.getItem("facemash_profile");
+  if (saved) {
+    try {
+      const p = JSON.parse(saved);
+      nameInput.value = p.name || "";
+      emailInput.value = p.email || "";
+      birthInput.value = p.birthDate || "";
+      relationInput.value = p.relationship || "single";
+      if (p.countryCode) countryInput.value = p.countryCode;
+      if (p.photoDataUrl) {
+        preview.src = p.photoDataUrl;
+        preview.classList.remove("hidden");
+      }
+    } catch {
+      // ignore bad local data
+    }
+  }
+
+  googleBtn.addEventListener("click", () => {
+    msg.textContent = "Google signup UI is ready. Backend OAuth hookup is next.";
+  });
+
+  appleBtn.addEventListener("click", () => {
+    msg.textContent = "Apple signup UI is ready. Backend OAuth hookup is next.";
+  });
+
+  photoInput.addEventListener("change", () => {
+    const file = photoInput.files && photoInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      preview.src = String(reader.result);
+      preview.classList.remove("hidden");
+    };
+    reader.readAsDataURL(file);
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const countryCode = countryInput.value;
+    const age = calculateAge(birthInput.value);
+    const required = requiredMajorAge(countryCode);
+
+    if (age < required) {
+      msg.textContent = `Minimum age for this country is ${required}.`;
+      return;
+    }
+
+    const profile = {
+      name: nameInput.value.trim(),
+      email: emailInput.value.trim(),
+      birthDate: birthInput.value,
+      relationship: relationInput.value,
+      countryCode,
+      photoDataUrl: preview.classList.contains("hidden") ? "" : preview.src,
+    };
+
+    localStorage.setItem("facemash_profile", JSON.stringify(profile));
+    msg.textContent = "Profile saved successfully.";
+  });
+}
+
+initCookies();
 loadCelebs();
+
+
+
 
