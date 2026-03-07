@@ -1,32 +1,47 @@
 ﻿# FaceMash
 
-FaceMash est une plateforme interactive ou les utilisateurs comparent deux celebrites et choisissent celle qu'ils trouvent la plus belle ou la plus charismatique. Chaque vote influence un classement dynamique base sur le **Elo rating system**, un algorithme de classement utilise dans les echecs et les competitions.
+FaceMash est une plateforme interactive de duel de profils publics avec classement Elo en temps reel.
 
-Le site propose des duels aleatoires entre celebrites provenant du monde entier. Les utilisateurs peuvent voter et voir l'evolution du classement en temps reel.
+## Ce qui est en place
 
-## Fonctionnalites principales
+- Pages separees : `index.html`, `battle.html`, `ranking.html`, `map.html`, `account.html`
+- Comparaison stricte par genre : homme vs homme, femme vs femme
+- Classements par continent et mondial
+- Planisphere cliquable (jsVectorMap + fallback Google GeoChart)
+- Bandeau cookies sur toutes les pages
+- Dataset `celebs.json` avec 5000 profils
 
-- Duel entre deux celebrites
-- Classement base sur le **Elo Rating System**
-- Categories par continent
-  - Europe
-  - Amerique
-  - Amerique Latine
-  - Asie
-  - Afrique
-  - Moyen-Orient
-  - Oceanie
-- Classement mondial des celebrites
-- Mise a jour automatique des scores apres chaque vote
+## Backend OAuth + KYC
 
-## Objectif
+Le backend est dans `server/` et fournit :
 
-FaceMash permet aux utilisateurs de decouvrir et comparer des celebrites du monde entier tout en creant un classement evolutif base sur les votes de la communaute.
+- OAuth Google
+- OAuth Apple
+- Session utilisateur
+- Endpoint KYC avec upload photo + carte d'identite/passeport
+- Verification de majorite par pays
+- Stockage SQLite
 
-## Inspiration
+### Lancer le backend
 
-Ce projet est inspire du premier site cree par **Mark Zuckerberg** avant la creation de **Meta Platforms**.
+```bash
+cd server
+npm install
+cp .env.example .env
+npm run dev
+```
 
----
+## Generation dataset
 
-Projet educatif developpe avec **HTML, CSS et JavaScript**.
+Script principal : `scripts/generate-celebs.ps1`
+
+Pour regenerer :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/generate-celebs.ps1
+```
+
+## Notes
+
+- Les identifiants OAuth doivent etre configures dans `server/.env`.
+- Pour la production KYC, prevoir chiffrement stockage, retention legale et controle d'acces strict.

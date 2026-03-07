@@ -1,9 +1,10 @@
 ﻿$ErrorActionPreference = "Stop"
 
-$userAgent = @{ "User-Agent" = "facemash-bot/2026 (known living profiles)" }
-$limit = 250
-$maxOffset = 700
-$sitelinksMin = 65
+$userAgent = @{ "User-Agent" = "facemash-bot/2026 (known living global profiles)" }
+$targetCount = 5000
+$limit = 900
+$maxOffset = 18000
+$sitelinksMin = 25
 
 $continentByQid = @{
   "Q15" = "africa"
@@ -16,17 +17,41 @@ $continentByQid = @{
 
 $occupationQids = @(
   "Q33999",    # actor
+  "Q10800557", # film actor
   "Q177220",   # singer
   "Q133311",   # rapper
   "Q639669",   # musician
+  "Q488111",   # songwriter
+  "Q189290",   # producer
+  "Q2526255",  # film director
+  "Q36180",    # writer
+  "Q1930187",  # journalist
+  "Q947873",   # tv presenter
+  "Q245068",   # comedian
   "Q937857",   # football player
-  "Q2066131",  # athlete
-  "Q82955",    # politician
+  "Q3665646",  # basketball player
+  "Q10833314", # tennis player
+  "Q10841764", # Formula One driver
+  "Q131524",   # entrepreneur
+  "Q43845",    # businessperson
   "Q6831",     # billionaire
+  "Q82955",    # politician
+  "Q30461",    # president
+  "Q2066131",  # athlete
+  "Q11513337", # esports player
   "Q2906862",  # influencer
+  "Q2045208",  # internet celebrity
   "Q17125263", # YouTuber
   "Q57414145", # online streamer
-  "Q82594"     # computer scientist
+  "Q50279140", # Twitch streamer
+  "Q82594",    # computer scientist
+  "Q13590141", # social media personality
+  "Q1028181",  # painter
+  "Q753110",   # photographer
+  "Q11247470", # television actor
+  "Q10798782", # television personality
+  "Q40348",    # lawyer
+  "Q15981151"  # model
 )
 
 $genderMap = @{
@@ -40,68 +65,58 @@ function Invoke-Sparql {
   $encoded = [uri]::EscapeDataString($Query)
   $url = "https://query.wikidata.org/sparql?format=json&query=$encoded"
 
-  for ($try = 1; $try -le 4; $try++) {
+  for ($try = 1; $try -le 5; $try++) {
     try {
-      $res = Invoke-RestMethod -Uri $url -Headers $userAgent -TimeoutSec 120
+      $res = Invoke-RestMethod -Uri $url -Headers $userAgent -TimeoutSec 180
       return $res.results.bindings
     } catch {
-      if ($try -eq 4) {
+      if ($try -eq 5) {
         return @()
       }
-      Start-Sleep -Seconds (2 * $try)
+      Start-Sleep -Seconds (3 * $try)
     }
   }
 }
 
-function Build-OccupationQuery {
-  param([string]$GenderQid, [string]$OccupationQid, [int]$Offset)
+function Build-BulkQuery {
+  param([int]$Offset)
+
+  $valuesOcc = ($occupationQids | ForEach-Object { "wd:$_" }) -join " "
 
 @"
-SELECT DISTINCT ?item ?itemLabel ?image ?country ?countryLabel ?sitelinks WHERE {
+SELECT DISTINCT ?item ?itemLabel ?image ?country ?countryLabel ?gender ?sitelinks WHERE {
+  VALUES ?occ { $valuesOcc }
+  VALUES ?gender { wd:Q6581097 wd:Q6581072 }
+
   ?item wdt:P31 wd:Q5;
-        wdt:P21 wd:$GenderQid;
+        wdt:P21 ?gender;
         wdt:P18 ?image;
         wdt:P27 ?country;
-        wdt:P106 wd:$OccupationQid;
+        wdt:P106 ?occ;
         wikibase:sitelinks ?sitelinks.
+
   FILTER(?sitelinks >= $sitelinksMin)
   FILTER NOT EXISTS { ?item wdt:P570 ?deathDate. }
+
   ?article schema:about ?item;
            schema:isPartOf <https://en.wikipedia.org/>.
+
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
-LIMIT $limit
-OFFSET $Offset
-"@
-}
-
-function Build-PresidentQuery {
-  param([string]$GenderQid, [int]$Offset)
-
-@"
-SELECT DISTINCT ?item ?itemLabel ?image ?country ?countryLabel ?sitelinks WHERE {
-  ?item wdt:P31 wd:Q5;
-        wdt:P21 wd:$GenderQid;
-        wdt:P18 ?image;
-        wdt:P27 ?country;
-        wdt:P39 wd:Q30461;
-        wikibase:sitelinks ?sitelinks.
-  FILTER(?sitelinks >= $sitelinksMin)
-  FILTER NOT EXISTS { ?item wdt:P570 ?deathDate. }
-  ?article schema:about ?item;
-           schema:isPartOf <https://en.wikipedia.org/>.
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-}
+ORDER BY DESC(?sitelinks)
 LIMIT $limit
 OFFSET $Offset
 "@
 }
 
 function Add-Rows {
-  param([System.Collections.Generic.Dictionary[string, object]]$Store, [array]$Rows, [string]$Gender)
+  param([System.Collections.Generic.Dictionary[string, object]]$Store, [array]$Rows)
 
   foreach ($row in $Rows) {
     if (-not $row.item.value -or -not $row.itemLabel.value -or -not $row.image.value -or -not $row.country.value) { continue }
+
+    $genderQid = ($row.gender.value -split '/')[-1]
+    if (-not $genderMap.ContainsKey($genderQid)) { continue }
 
     $id = ($row.item.value -split '/')[-1]
     $countryId = ($row.country.value -split '/')[-1]
@@ -115,13 +130,15 @@ function Add-Rows {
         id = $id
         name = $row.itemLabel.value
         image = ($row.image.value -replace '^http:', 'https:')
-        gender = $Gender
+        gender = $genderMap[$genderQid]
         countryId = $countryId
         countryName = $countryName
         sitelinks = $sitelinks
       }
     } elseif ($sitelinks -gt $Store[$id].sitelinks) {
       $Store[$id].sitelinks = $sitelinks
+      $Store[$id].countryId = $countryId
+      $Store[$id].countryName = $countryName
     }
   }
 }
@@ -129,12 +146,14 @@ function Add-Rows {
 function Invoke-WikidataClaims {
   param([string[]]$Ids)
 
+  if (-not $Ids.Count) { return $null }
+
   $joined = ($Ids -join '|')
   $url = "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=claims&ids=$joined"
 
   for ($try = 1; $try -le 4; $try++) {
     try {
-      return Invoke-RestMethod -Uri $url -TimeoutSec 120
+      return Invoke-RestMethod -Uri $url -TimeoutSec 180
     } catch {
       if ($try -eq 4) { return $null }
       Start-Sleep -Seconds (2 * $try)
@@ -143,29 +162,28 @@ function Invoke-WikidataClaims {
 }
 
 $store = New-Object 'System.Collections.Generic.Dictionary[string, object]'
+$emptyBatches = 0
 
-foreach ($genderQid in $genderMap.Keys) {
-  $genderName = $genderMap[$genderQid]
+for ($offset = 0; $offset -le $maxOffset; $offset += $limit) {
+  $query = Build-BulkQuery -Offset $offset
+  $rows = Invoke-Sparql -Query $query
 
-  foreach ($occ in $occupationQids) {
-    for ($offset = 0; $offset -le $maxOffset; $offset += $limit) {
-      $query = Build-OccupationQuery -GenderQid $genderQid -OccupationQid $occ -Offset $offset
-      $rows = Invoke-Sparql -Query $query
-      if (-not $rows.Count) { break }
-
-      Add-Rows -Store $store -Rows $rows -Gender $genderName
-      Start-Sleep -Milliseconds 250
-    }
+  if (-not $rows.Count) {
+    $emptyBatches += 1
+    if ($emptyBatches -ge 2) { break }
+    continue
   }
 
-  for ($offset = 0; $offset -le $maxOffset; $offset += $limit) {
-    $query = Build-PresidentQuery -GenderQid $genderQid -Offset $offset
-    $rows = Invoke-Sparql -Query $query
-    if (-not $rows.Count) { break }
+  $emptyBatches = 0
+  Add-Rows -Store $store -Rows $rows
 
-    Add-Rows -Store $store -Rows $rows -Gender $genderName
-    Start-Sleep -Milliseconds 250
+  "batch_offset=$offset fetched=$($rows.Count) unique=$($store.Count)" | Write-Output
+
+  if ($store.Count -ge ($targetCount + 1200) -and $offset -ge 4000) {
+    break
   }
+
+  Start-Sleep -Milliseconds 400
 }
 
 $raw = $store.Values
@@ -206,7 +224,7 @@ for ($i = 0; $i -lt $countryIds.Count; $i += 45) {
       if ($iso2) { $iso2 = $iso2.ToLower() }
     }
 
-    if ($continentSlug) {
+    if ($continentSlug -and $iso2) {
       $countryMeta[$countryId] = [pscustomobject]@{
         continent = $continentSlug
         iso2 = $iso2
@@ -217,7 +235,29 @@ for ($i = 0; $i -lt $countryIds.Count; $i += 45) {
   Start-Sleep -Milliseconds 150
 }
 
+$manualCountryOverride = @{
+  "Q615" = [pscustomobject]@{ countryName = "Argentina"; countryCode = "ar"; continent = "south-america" } # Lionel Messi
+}
+
 $final = foreach ($row in $raw) {
+  if ($row.name -match '^Q\d+$') { continue }
+
+  if ($manualCountryOverride.ContainsKey($row.id)) {
+    [pscustomobject]@{
+      id = $row.id
+      name = $row.name
+      image = $row.image
+      gender = $row.gender
+      continent = $manualCountryOverride[$row.id].continent
+      countryId = $row.countryId
+      countryName = $manualCountryOverride[$row.id].countryName
+      countryCode = $manualCountryOverride[$row.id].countryCode
+      score = 1200
+      sitelinks = $row.sitelinks
+    }
+    continue
+  }
+
   if (-not $countryMeta.ContainsKey($row.countryId)) { continue }
 
   [pscustomobject]@{
@@ -234,12 +274,33 @@ $final = foreach ($row in $raw) {
   }
 }
 
+$final = $final |
+  Sort-Object @{Expression='sitelinks';Descending=$true}, name -Unique |
+  Where-Object { $_.countryCode -and $_.continent }
+
+$manualAdds = @(
+  [pscustomobject]@{ id='CUSTOM_CENTRAL_CEE'; name='Central Cee'; image='https://commons.wikimedia.org/wiki/Special:FilePath/Central%20Cee%20at%20Reading%20Festival%202022.jpg'; gender='male'; continent='europe'; countryId='Q145'; countryName='United Kingdom'; countryCode='gb'; score=1200; sitelinks=130 }
+)
+
+$existingByName = @{}
+$final | ForEach-Object { $existingByName[$_.name.ToLower()] = $true }
+foreach ($p in $manualAdds) {
+  if (-not $existingByName.ContainsKey($p.name.ToLower())) {
+    $final += $p
+  }
+}
+
 $final = $final | Sort-Object @{Expression='sitelinks';Descending=$true}, continent, countryName, gender, name
 
-$final | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 "celebs.json"
+if ($final.Count -gt $targetCount) {
+  $final = $final | Select-Object -First $targetCount
+}
+
+$final | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 "celebs.json"
 
 $contStats = $final | Group-Object continent | Sort-Object Name | ForEach-Object { "{0}:{1}" -f $_.Name, $_.Count }
 "total=$($final.Count)" | Write-Output
 "male=$((($final | Where-Object gender -eq 'male').Count)) female=$((($final | Where-Object gender -eq 'female').Count))" | Write-Output
 "continents=" + ($contStats -join ",") | Write-Output
 "min_sitelinks=$sitelinksMin" | Write-Output
+"target=$targetCount" | Write-Output

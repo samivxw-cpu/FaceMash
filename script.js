@@ -6,6 +6,16 @@ const POPULARITY_MIN_WITH_SIGNAL = 65;
 const MAX_RECENT_IDS = 40;
 const MAX_RECENT_PAIRS = 280;
 
+const API_BASE = (() => {
+  try {
+    const fromWindow = window.FACEMASH_API_BASE;
+    const fromStorage = localStorage.getItem("facemash_api_base");
+    return String(fromWindow || fromStorage || "http://localhost:8787").replace(/\/$/, "");
+  } catch {
+    return "http://localhost:8787";
+  }
+})();
+
 const CONTINENT_ORDER = ["world", "africa", "asia", "europe", "north-america", "south-america", "oceania"];
 const CONTINENT_LABEL = {
   world: "World",
@@ -56,6 +66,10 @@ function el(id) {
 
 function has(id) {
   return Boolean(el(id));
+}
+
+function apiUrl(path) {
+  return API_BASE + path;
 }
 
 function expectedScore(a, b) {
@@ -698,6 +712,16 @@ function initProfileForm() {
   const ageDeclaration = el("ageDeclaration");
   const preview = el("profilePreview");
   const msg = el("profileMsg");
+  const googleSignup = el("googleSignup");
+  const appleSignup = el("appleSignup");
+
+  if (googleSignup) googleSignup.href = apiUrl("/auth/google");
+  if (appleSignup) appleSignup.href = apiUrl("/auth/apple");
+
+  const setMessage = (text, isError = false) => {
+    msg.textContent = text;
+    msg.style.color = isError ? "#a10f07" : "#5a4b38";
+  };
 
   populateCountryOptions(countryInput);
 
@@ -720,6 +744,44 @@ function initProfileForm() {
     }
   }
 
+  const authQuery = new URLSearchParams(window.location.search).get("auth");
+  if (authQuery === "success") {
+    setMessage("Sign-in successful. Complete your KYC form.");
+  } else if (authQuery === "logout") {
+    setMessage("You are signed out.");
+  }
+
+  const refreshAuthState = async () => {
+    try {
+      const response = await fetch(apiUrl("/api/me"), {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        setMessage("Backend reachable but auth check failed.", true);
+        return false;
+      }
+
+      const data = await response.json();
+      if (!data.authenticated) {
+        setMessage("Please sign in with Google or Apple before KYC submit.", true);
+        return false;
+      }
+
+      if (data.user?.name && !nameInput.value) nameInput.value = data.user.name;
+      if (data.user?.email && !emailInput.value) emailInput.value = data.user.email;
+
+      const kycState = data.latestKyc ? ` | Latest KYC: ${data.latestKyc.status}` : "";
+      setMessage(`Signed in as ${data.user?.email || data.user?.name || "user"}${kycState}`);
+      return true;
+    } catch {
+      setMessage(`Backend unavailable at ${API_BASE}. Start server and set OAuth credentials.`, true);
+      return false;
+    }
+  };
+
+  refreshAuthState();
+
   photoInput.addEventListener("change", () => {
     const file = photoInput.files && photoInput.files[0];
     if (!file) return;
@@ -732,7 +794,7 @@ function initProfileForm() {
     reader.readAsDataURL(file);
   });
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const countryCode = countryInput.value;
@@ -740,34 +802,64 @@ function initProfileForm() {
     const requiredAge = requiredMajorAge(countryCode);
 
     if (age < requiredAge) {
-      msg.textContent = `Minimum age for ${countryInput.selectedOptions[0]?.textContent || "this country"} is ${requiredAge}.`;
+      setMessage(`Minimum age for ${countryInput.selectedOptions[0]?.textContent || "this country"} is ${requiredAge}.`, true);
       return;
     }
 
     if (!identityType.value || !identityFile.files || !identityFile.files[0]) {
-      msg.textContent = "Identity document type and file are required.";
+      setMessage("Identity document type and file are required.", true);
       return;
     }
 
     if (!ageDeclaration.checked) {
-      msg.textContent = "You must confirm legal age and document validity.";
+      setMessage("You must confirm legal age and document validity.", true);
       return;
     }
 
-    const profile = {
-      name: nameInput.value.trim(),
-      email: emailInput.value.trim(),
-      birthDate: birthInput.value,
-      relationship: relationInput.value,
-      countryCode,
-      identityType: identityType.value,
-      identityFileName: identityFile.files[0].name,
-      ageDeclaration: ageDeclaration.checked,
-      photoDataUrl: preview.classList.contains("hidden") ? "" : preview.src,
-    };
+    const isAuthenticated = await refreshAuthState();
+    if (!isAuthenticated) return;
 
-    localStorage.setItem("facemash_profile", JSON.stringify(profile));
-    msg.textContent = "Profile submitted. Identity check is pending manual review.";
+    const payload = new FormData();
+    payload.append("fullName", nameInput.value.trim());
+    payload.append("email", emailInput.value.trim());
+    payload.append("birthDate", birthInput.value);
+    payload.append("relationshipStatus", relationInput.value);
+    payload.append("countryCode", countryCode);
+    payload.append("identityType", identityType.value);
+    payload.append("ageDeclaration", String(ageDeclaration.checked));
+    payload.append("profilePhoto", photoInput.files[0]);
+    payload.append("identityFile", identityFile.files[0]);
+
+    try {
+      const response = await fetch(apiUrl("/api/kyc/submit"), {
+        method: "POST",
+        credentials: "include",
+        body: payload,
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMessage(result.error || "KYC submission failed.", true);
+        return;
+      }
+
+      const profile = {
+        name: nameInput.value.trim(),
+        email: emailInput.value.trim(),
+        birthDate: birthInput.value,
+        relationship: relationInput.value,
+        countryCode,
+        identityType: identityType.value,
+        identityFileName: identityFile.files[0].name,
+        ageDeclaration: ageDeclaration.checked,
+        photoDataUrl: preview.classList.contains("hidden") ? "" : preview.src,
+      };
+
+      localStorage.setItem("facemash_profile", JSON.stringify(profile));
+      setMessage(result.message || "KYC submitted. Manual review pending.");
+    } catch {
+      setMessage("Could not reach backend KYC endpoint.", true);
+    }
   });
 }
 
@@ -830,12 +922,7 @@ function applyCountryOverrides(record) {
 function initCookieBanner() {
   const banner = el("cookie-banner");
   if (!banner) return;
-
-  if (localStorage.getItem("cookiesAccepted")) {
-    banner.style.display = "none";
-  } else {
-    banner.style.display = "flex";
-  }
+  banner.style.display = "flex";
 }
 
 function acceptCookies() {
@@ -929,5 +1016,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initCookieBanner();
   loadCelebs();
 });
+
+
+
+
 
 
