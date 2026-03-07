@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FaceMash - Create Account</title>
-  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260308a">
-  <link rel="stylesheet" href="style.css?v=20260308a">
+  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260308c">
+  <link rel="stylesheet" href="style.css?v=20260308c">
 </head>
 <body data-page="account">
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="index.html" aria-label="FaceMash home">
-        <img src="logo.svg?v=20260308a" alt="FaceMash logo" class="logo" width="40" height="40">
+        <img src="logo.svg?v=20260308c" alt="FaceMash logo" class="logo" width="40" height="40">
         <span>FaceMash</span>
       </a>
       <nav class="header-tabs" aria-label="Main navigation">
@@ -26,35 +26,11 @@
   <main class="page">
     <section class="account-wrap">
       <div class="account-head">
-        <h1>Create your FaceMash account</h1>
-        <p>Sign in with Google/Apple or email + password, then complete your KYC profile.</p>
+        <h1>Create your FaceMash profile</h1>
+        <p>This version runs in frontend-only mode. Your profile is saved on your device without OAuth errors.</p>
       </div>
 
-      <div class="auth-buttons auth-buttons-brand">
-        <a id="googleSignup" class="chip-btn auth-link auth-provider google" href="/auth/google">
-          <span class="auth-icon">G</span>
-          Continue with Google
-        </a>
-        <a id="appleSignup" class="chip-btn auth-link auth-provider apple" href="/auth/apple">
-          <span class="auth-icon">A</span>
-          Continue with Apple
-        </a>
-      </div>
-
-      <form id="loginForm" class="login-form" novalidate>
-        <label>
-          Email
-          <input type="email" id="loginEmail" autocomplete="email" required>
-        </label>
-        <label>
-          Password
-          <input type="password" id="loginPassword" autocomplete="current-password" required minlength="6">
-        </label>
-        <button type="submit" class="chip-btn">Sign in</button>
-        <button type="button" id="forgotPasswordBtn" class="link-btn">Forgot password?</button>
-      </form>
-
-      <hr class="account-divider">
+      <p class="account-note">External login is disabled in this stable version to keep the account page fully reliable on static hosting.</p>
 
       <form id="profileForm" class="profile-form" novalidate>
         <label>
@@ -110,7 +86,7 @@
           I confirm that I am at least the legal age in my country and that my document is valid.
         </label>
 
-        <button type="submit" class="chip-btn profile-submit">Submit profile</button>
+        <button type="submit" class="chip-btn profile-submit">Save profile</button>
       </form>
 
       <p id="profileMsg" class="profile-msg"></p>
@@ -134,11 +110,7 @@
     <a href="cookies.html">Learn more</a>
   </div>
 
-  <script src="script.js?v=20260308a" defer></script>
+  <script src="script.js?v=20260308c" defer></script>
 </body>
 </html>
-
-
-
-
 

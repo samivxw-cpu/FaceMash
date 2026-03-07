@@ -1,10 +1,10 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
 $userAgent = @{ "User-Agent" = "facemash-bot/2026 (known living global profiles)" }
-$targetCount = 5000
+$targetCount = 8000
 $limit = 900
-$maxOffset = 18000
-$sitelinksMin = 25
+$maxOffset = 54000
+$sitelinksMin = 20
 
 $continentByQid = @{
   "Q15" = "africa"
@@ -304,3 +304,4 @@ $contStats = $final | Group-Object continent | Sort-Object Name | ForEach-Object
 "continents=" + ($contStats -join ",") | Write-Output
 "min_sitelinks=$sitelinksMin" | Write-Output
 "target=$targetCount" | Write-Output
+

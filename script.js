@@ -1,20 +1,10 @@
 const K = 32;
 const DEFAULT_SCORE = 1200;
 const AFRICA_MIN_TAB_COUNT = 300;
+const MAX_ACTIVE_PROFILES = 5000;
 const FALLBACK_IMG = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
-const POPULARITY_MIN_WITH_SIGNAL = 65;
-const MAX_RECENT_IDS = 40;
-const MAX_RECENT_PAIRS = 280;
-
-const API_BASE = (() => {
-  try {
-    const fromWindow = window.FACEMASH_API_BASE;
-    const fromStorage = localStorage.getItem("facemash_api_base");
-    return String(fromWindow || fromStorage || "http://localhost:8787").replace(/\/$/, "");
-  } catch {
-    return "http://localhost:8787";
-  }
-})();
+const MAX_RECENT_IDS = 48;
+const MAX_RECENT_PAIRS = 320;
 
 const CONTINENT_ORDER = ["world", "africa", "asia", "europe", "north-america", "south-america", "oceania"];
 const CONTINENT_LABEL = {
@@ -56,11 +46,20 @@ const FALLBACK_COUNTRIES = [
   ["es", "Spain"],
   ["br", "Brazil"],
   ["ar", "Argentina"],
+  ["ma", "Morocco"],
+  ["dz", "Algeria"],
+  ["tn", "Tunisia"],
   ["ca", "Canada"],
+  ["mx", "Mexico"],
   ["in", "India"],
   ["jp", "Japan"],
-  ["au", "Australia"]
+  ["kr", "South Korea"],
+  ["au", "Australia"],
+  ["ng", "Nigeria"],
+  ["za", "South Africa"],
+  ["eg", "Egypt"],
 ];
+
 let celebs = [];
 let currentGender = "male";
 let currentContinent = "world";
@@ -80,10 +79,6 @@ function el(id) {
 
 function has(id) {
   return Boolean(el(id));
-}
-
-function apiUrl(path) {
-  return API_BASE + path;
 }
 
 function expectedScore(a, b) {
@@ -143,6 +138,7 @@ function countryCodeToFlag(code) {
 }
 
 function setImage(imgEl, url) {
+  if (!imgEl) return;
   imgEl.onerror = () => {
     imgEl.onerror = null;
     imgEl.src = FALLBACK_IMG;
@@ -175,12 +171,9 @@ function wasPairRecentlyUsed(a, b) {
 function updateQuestionLine() {
   const line = el("questionLine");
   if (!line) return;
-
-  if (currentGender === "male") {
-    line.textContent = "Who is more handsome, left or right?";
-  } else {
-    line.textContent = "Who is more beautiful, left or right?";
-  }
+  line.textContent = currentGender === "male"
+    ? "Who looks better, left or right?"
+    : "Who looks better, left or right?";
 }
 
 function updateModeButtons() {
@@ -259,7 +252,7 @@ function pickCandidate(pool, excludeIds = []) {
   if (!candidates.length) return null;
 
   const nonRecent = candidates.filter((p) => !recentIds.includes(p.id));
-  if (nonRecent.length >= 8) candidates = nonRecent;
+  if (nonRecent.length >= 10) candidates = nonRecent;
 
   candidates.sort((a, b) => {
     const shownA = a.shown || 0;
@@ -270,28 +263,24 @@ function pickCandidate(pool, excludeIds = []) {
     const votesB = b.votes || 0;
     if (votesA !== votesB) return votesA - votesB;
 
-    const popA = a.popularity || 0;
-    const popB = b.popularity || 0;
-    if (popA !== popB) return popB - popA;
-
-    return Math.random() - 0.5;
+    return (b.popularity || 0) - (a.popularity || 0);
   });
 
-  const windowSize = Math.min(36, candidates.length);
+  const windowSize = Math.min(40, candidates.length);
   const shortList = candidates.slice(0, windowSize);
   return shortList[Math.floor(Math.random() * shortList.length)];
 }
 
 function clearBattle() {
+  left = null;
+  right = null;
+
   const imgLeft = el("imgLeft");
   const imgRight = el("imgRight");
   const nameLeft = el("nameLeft");
   const nameRight = el("nameRight");
   const countryLeft = el("countryLeft");
   const countryRight = el("countryRight");
-
-  left = null;
-  right = null;
 
   if (imgLeft) imgLeft.removeAttribute("src");
   if (imgRight) imgRight.removeAttribute("src");
@@ -309,6 +298,7 @@ function renderPair() {
 
   setImage(el("imgLeft"), left.image);
   setImage(el("imgRight"), right.image);
+
   el("nameLeft").textContent = left.name;
   el("nameRight").textContent = right.name;
 
@@ -544,7 +534,7 @@ async function ensureMapLibrary() {
         loaded = true;
         break;
       } catch {
-        // try next
+        // try next source
       }
     }
 
@@ -624,10 +614,10 @@ function renderGoogleGeoChart(mapEl) {
 
   chart.draw(data, {
     legend: "none",
-    colorAxis: { colors: ["#f4e7d5", "#b5140c"] },
+    colorAxis: { colors: ["#f8d8d2", "#da2d20"] },
     backgroundColor: "#ffffff",
-    datalessRegionColor: "#ece7df",
-    defaultColor: "#ead8bf",
+    datalessRegionColor: "#efefef",
+    defaultColor: "#ede8e6",
   });
 
   return true;
@@ -696,21 +686,21 @@ async function initWorldMap() {
         zoomOnScroll: true,
         regionStyle: {
           initial: {
-            fill: "#ecdcc7",
-            stroke: "#cfb99b",
+            fill: "#ece8e6",
+            stroke: "#bbb1ad",
             strokeWidth: 0.7,
           },
           hover: {
-            fill: "#d88d80",
+            fill: "#f06c5f",
           },
           selected: {
-            fill: "#b5140c",
+            fill: "#da2d20",
           },
         },
         series: {
           regions: [{
             attribute: "fill",
-            scale: ["#f4e7d5", "#b5140c"],
+            scale: ["#f8d8d2", "#da2d20"],
             values: {},
             normalizeFunction: "polynomial",
           }],
@@ -743,8 +733,8 @@ function calculateAge(dateString) {
 
   const now = new Date();
   let age = now.getFullYear() - birth.getFullYear();
-  const m = now.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age -= 1;
+  const monthDelta = now.getMonth() - birth.getMonth();
+  if (monthDelta < 0 || (monthDelta === 0 && now.getDate() < birth.getDate())) age -= 1;
   return age;
 }
 
@@ -773,14 +763,6 @@ function populateCountryOptions(selectEl) {
   });
 }
 
-function initAuthProviderLinks() {
-  const googleSignup = el("googleSignup");
-  const appleSignup = el("appleSignup");
-
-  if (googleSignup) googleSignup.href = apiUrl("/auth/google");
-  if (appleSignup) appleSignup.href = apiUrl("/auth/apple");
-}
-
 function initProfileForm() {
   if (!has("profileForm") || profileInitialized) return;
   profileInitialized = true;
@@ -797,20 +779,11 @@ function initProfileForm() {
   const ageDeclaration = el("ageDeclaration");
   const preview = el("profilePreview");
   const msg = el("profileMsg");
-  const googleSignup = el("googleSignup");
-  const appleSignup = el("appleSignup");
-
-  const loginForm = el("loginForm");
-  const loginEmail = el("loginEmail");
-  const loginPassword = el("loginPassword");
-  const forgotPasswordBtn = el("forgotPasswordBtn");
-
-  if (googleSignup) googleSignup.href = apiUrl("/auth/google");
-  if (appleSignup) appleSignup.href = apiUrl("/auth/apple");
 
   const setMessage = (text, isError = false) => {
+    if (!msg) return;
     msg.textContent = text;
-    msg.style.color = isError ? "#a10f07" : "#5a4b38";
+    msg.style.color = isError ? "#ffb5b0" : "#d7f5e3";
   };
 
   populateCountryOptions(countryInput);
@@ -829,109 +802,10 @@ function initProfileForm() {
         preview.classList.remove("hidden");
       }
       if (ageDeclaration) ageDeclaration.checked = Boolean(p.ageDeclaration);
+      setMessage("Local profile loaded on this device.");
     } catch {
-      // ignore
+      // ignore invalid local payload
     }
-  }
-
-  const authQuery = new URLSearchParams(window.location.search).get("auth");
-  if (authQuery === "success") {
-    setMessage("Sign-in successful. Complete your KYC form.");
-  } else if (authQuery === "logout") {
-    setMessage("You are signed out.");
-  }
-
-  const refreshAuthState = async () => {
-    try {
-      const response = await fetch(apiUrl("/api/me"), {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        setMessage("Backend reachable but auth check failed.", true);
-        return false;
-      }
-
-      const data = await response.json();
-      if (!data.authenticated) {
-        return false;
-      }
-
-      if (data.user?.name && !nameInput.value) nameInput.value = data.user.name;
-      if (data.user?.email && !emailInput.value) emailInput.value = data.user.email;
-      if (data.user?.email && loginEmail && !loginEmail.value) loginEmail.value = data.user.email;
-
-      const kycState = data.latestKyc ? ` | Latest KYC: ${data.latestKyc.status}` : "";
-      setMessage(`Signed in as ${data.user?.email || data.user?.name || "user"}${kycState}`);
-      return true;
-    } catch {
-      setMessage(`Backend unavailable at ${API_BASE}. Start server and set OAuth credentials.`, true);
-      return false;
-    }
-  };
-
-  refreshAuthState();
-
-  if (loginForm && loginEmail && loginPassword) {
-    loginForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      try {
-        const response = await fetch(apiUrl("/api/auth/local/login"), {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: loginEmail.value.trim(),
-            password: loginPassword.value,
-            name: nameInput.value.trim(),
-          }),
-        });
-
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          setMessage(result.error || "Login failed.", true);
-          return;
-        }
-
-        setMessage(result.message || "Signed in successfully.");
-        await refreshAuthState();
-      } catch {
-        setMessage("Could not reach local login endpoint.", true);
-      }
-    });
-  }
-
-  if (forgotPasswordBtn) {
-    forgotPasswordBtn.addEventListener("click", async () => {
-      const email = (loginEmail?.value || emailInput.value || "").trim();
-      if (!email) {
-        setMessage("Enter your email first for password reset.", true);
-        return;
-      }
-
-      try {
-        const response = await fetch(apiUrl("/api/auth/local/forgot-password"), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        });
-
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          setMessage(result.error || "Forgot password request failed.", true);
-          return;
-        }
-
-        setMessage(result.message || "Password reset request accepted.");
-      } catch {
-        setMessage("Could not reach forgot-password endpoint.", true);
-      }
-    });
   }
 
   photoInput.addEventListener("change", () => {
@@ -946,7 +820,7 @@ function initProfileForm() {
     reader.readAsDataURL(file);
   });
 
-  form.addEventListener("submit", async (event) => {
+  form.addEventListener("submit", (event) => {
     event.preventDefault();
 
     const countryCode = countryInput.value;
@@ -968,53 +842,22 @@ function initProfileForm() {
       return;
     }
 
-    const isAuthenticated = await refreshAuthState();
-    if (!isAuthenticated) {
-      setMessage("Please sign in first (Google, Apple, or email/password).", true);
-      return;
-    }
+    const profile = {
+      name: nameInput.value.trim(),
+      email: emailInput.value.trim(),
+      birthDate: birthInput.value,
+      relationship: relationInput.value,
+      countryCode,
+      countryName: countryInput.selectedOptions[0]?.textContent || "",
+      identityType: identityType.value,
+      identityFileName: identityFile.files[0].name,
+      ageDeclaration: ageDeclaration.checked,
+      photoDataUrl: preview.classList.contains("hidden") ? "" : preview.src,
+      updatedAt: new Date().toISOString(),
+    };
 
-    const payload = new FormData();
-    payload.append("fullName", nameInput.value.trim());
-    payload.append("email", emailInput.value.trim());
-    payload.append("birthDate", birthInput.value);
-    payload.append("relationshipStatus", relationInput.value);
-    payload.append("countryCode", countryCode);
-    payload.append("identityType", identityType.value);
-    payload.append("ageDeclaration", String(ageDeclaration.checked));
-    payload.append("profilePhoto", photoInput.files[0]);
-    payload.append("identityFile", identityFile.files[0]);
-
-    try {
-      const response = await fetch(apiUrl("/api/kyc/submit"), {
-        method: "POST",
-        credentials: "include",
-        body: payload,
-      });
-
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setMessage(result.error || "KYC submission failed.", true);
-        return;
-      }
-
-      const profile = {
-        name: nameInput.value.trim(),
-        email: emailInput.value.trim(),
-        birthDate: birthInput.value,
-        relationship: relationInput.value,
-        countryCode,
-        identityType: identityType.value,
-        identityFileName: identityFile.files[0].name,
-        ageDeclaration: ageDeclaration.checked,
-        photoDataUrl: preview.classList.contains("hidden") ? "" : preview.src,
-      };
-
-      localStorage.setItem("facemash_profile", JSON.stringify(profile));
-      setMessage(result.message || "KYC submitted. Manual review pending.");
-    } catch {
-      setMessage("Could not reach backend KYC endpoint.", true);
-    }
+    localStorage.setItem("facemash_profile", JSON.stringify(profile));
+    setMessage("Profile saved locally. Verification services can be connected later.");
   });
 }
 
@@ -1101,7 +944,6 @@ async function loadCelebs() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const raw = await response.json();
-    const hasPopularitySignal = raw.some((item) => Number.isFinite(item.sitelinks));
     const seen = new Set();
 
     celebs = raw
@@ -1109,13 +951,14 @@ async function loadCelebs() {
         const gender = normalizeGender(item.gender);
         const continent = normalizeContinent(item.continent || item.region || item.continentLabel);
         const countryCode = normalizeCountryCode(item.countryCode);
-        const popularity = Number.isFinite(item.sitelinks) ? item.sitelinks : 0;
+        const popularity = Number.isFinite(item.sitelinks)
+          ? item.sitelinks
+          : (Number.isFinite(item.popularity) ? item.popularity : 0);
         const id = item.id || `c${index + 1}`;
 
         if (seen.has(id)) return null;
         if (!item.name || !item.image || !gender || !continent) return null;
         if (String(item.name).match(/^Q\d+$/)) return null;
-        if (hasPopularitySignal && popularity < POPULARITY_MIN_WITH_SIGNAL) return null;
 
         seen.add(id);
 
@@ -1136,9 +979,14 @@ async function loadCelebs() {
       .filter(Boolean)
       .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
 
+    if (celebs.length > MAX_ACTIVE_PROFILES) {
+      celebs = celebs.slice(0, MAX_ACTIVE_PROFILES);
+    }
+
     if (celebs.length < 2) {
       setStatus("Dataset is too small.");
       clearBattle();
+      if (has("profileForm")) initProfileForm();
       return;
     }
 
@@ -1167,6 +1015,7 @@ async function loadCelebs() {
     if (has("profileForm")) initProfileForm();
   }
 }
+
 window.acceptCookies = acceptCookies;
 window.rejectCookies = rejectCookies;
 window.setGender = setGender;
@@ -1174,29 +1023,7 @@ window.setContinent = setContinent;
 window.vote = vote;
 
 document.addEventListener("DOMContentLoaded", () => {
-  initAuthProviderLinks();
   initCookieBanner();
   loadCelebs();
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
