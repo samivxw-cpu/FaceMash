@@ -4,55 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FaceMash</title>
-  <meta name="description" content="FaceMash est une plateforme interactive où les utilisateurs comparent deux célébrités et choisissent celle qu’ils trouvent la plus belle ou la plus charismatique. Classement dynamique basé sur le Elo Rating System.">
-  <meta name="keywords" content="FaceMash, celebrity voting, Elo ranking, face comparison, continents">
+  <meta name="description" content="FaceMash lets users compare public profiles and vote in live rankings by country and continent.">
+  <meta name="keywords" content="FaceMash, celebrity voting, world ranking, actors, footballers, influencers">
   <meta property="og:title" content="FaceMash">
-  <meta property="og:description" content="Compare celebrities, vote, and watch live rankings by continent.">
+  <meta property="og:description" content="Compare public profiles, vote, and explore rankings by country and continent.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://samivxw-cpu.github.io/FaceMash/logo.svg">
   <meta property="og:url" content="https://samivxw-cpu.github.io/FaceMash/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="FaceMash">
-  <meta name="twitter:description" content="Compare celebrities and rank them live.">
+  <meta name="twitter:description" content="World profile voting and rankings.">
   <meta name="twitter:image" content="https://samivxw-cpu.github.io/FaceMash/logo.svg">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "FaceMash",
-    "url": "https://samivxw-cpu.github.io/FaceMash/",
-    "description": "FaceMash est une plateforme interactive où les utilisateurs comparent deux célébrités et choisissent celle qu’ils trouvent la plus belle ou la plus charismatique.",
-    "image": "https://samivxw-cpu.github.io/FaceMash/logo.svg",
-    "author": {
-      "@type": "Person",
-      "name": "Benabdelmalek Sami"
-    }
-  }
-  </script>
-  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260307c">
-  <link rel="apple-touch-icon" href="logo.svg?v=20260307c">
-  <link rel="manifest" href="site.webmanifest?v=20260307c">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css?v=20260307c">
-  <link rel="stylesheet" href="style.css?v=20260307c">
+  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260307e">
+  <link rel="apple-touch-icon" href="logo.svg?v=20260307e">
+  <link rel="manifest" href="site.webmanifest?v=20260307e">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css?v=20260307e">
+  <link rel="stylesheet" href="style.css?v=20260307e">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="index.html" aria-label="FaceMash home">
-        <img src="logo.svg?v=20260307c" alt="FaceMash logo" class="logo" width="40" height="40">
+        <img src="logo.svg?v=20260307e" alt="FaceMash logo" class="logo" width="40" height="40">
         <span>FaceMash</span>
       </a>
 
-      <nav class="header-tabs" aria-label="Main tabs">
-        <button type="button" id="tabBattle" class="tab-btn" onclick="setView('battle')">Battle</button>
-        <button type="button" id="tabRanking" class="tab-btn" onclick="setView('ranking')">Ranking</button>
-      </nav>
+      <div class="header-right">
+        <nav class="header-tabs" aria-label="Main tabs">
+          <button type="button" id="tabBattle" class="tab-btn" onclick="setView('battle')">Battle</button>
+          <button type="button" id="tabRanking" class="tab-btn" onclick="setView('ranking')">Ranking</button>
+        </nav>
+        <a class="create-account-btn" href="#account-section">Create account</a>
+      </div>
     </div>
   </header>
 
   <main class="page">
     <section class="hero">
-      <h1>Pick the profile you prefer.</h1>
+      <h1>Choose the profile you prefer.</h1>
       <p class="subline" id="questionLine">Who is more handsome, left or right?</p>
 
       <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
@@ -69,6 +58,7 @@
         <article class="face-card" onclick="vote('left')">
           <img id="imgLeft" alt="Left profile" loading="lazy">
           <h2 id="nameLeft"></h2>
+          <p id="countryLeft" class="country-line"></p>
         </article>
 
         <div class="versus">OR</div>
@@ -76,6 +66,7 @@
         <article class="face-card" onclick="vote('right')">
           <img id="imgRight" alt="Right profile" loading="lazy">
           <h2 id="nameRight"></h2>
+          <p id="countryRight" class="country-line"></p>
         </article>
       </section>
 
@@ -95,12 +86,12 @@
     <section id="rankingView" class="hidden">
       <section class="rankings full-rankings">
         <article class="ranking-panel">
-          <h3 id="maleRankingTitle">Full Men Ranking</h3>
+          <h3 id="maleRankingTitle">World Men Ranking</h3>
           <ol id="rankingMaleFull"></ol>
         </article>
 
         <article class="ranking-panel">
-          <h3 id="femaleRankingTitle">Full Women Ranking</h3>
+          <h3 id="femaleRankingTitle">World Women Ranking</h3>
           <ol id="rankingFemaleFull"></ol>
         </article>
       </section>
@@ -109,7 +100,7 @@
     <section class="map-wrap">
       <div class="map-head">
         <h3>Global FaceMap</h3>
-        <p>Click a country to see its current top profile.</p>
+        <p>Click a country to view its top current profile.</p>
       </div>
       <div id="worldMap" class="world-map" aria-label="World map"></div>
       <article id="countrySpotlight" class="country-spotlight">
@@ -119,22 +110,38 @@
 
     <section class="gallery-wrap">
       <div class="gallery-head">
-        <h3 id="galleryTitle">Living Celebrity Gallery</h3>
+        <h3 id="galleryTitle">Celebrity Gallery</h3>
         <p id="galleryCount"></p>
       </div>
       <div id="gallery" class="gallery"></div>
       <button type="button" id="loadMoreBtn" class="load-more" onclick="loadMoreGallery()">Load more</button>
     </section>
 
-    <section class="account-wrap">
+    <section id="account-section" class="account-wrap">
       <div class="account-head">
         <h3>FaceMash by Benabdelmalek Sami</h3>
-        <p>Create your profile and eligibility info.</p>
+        <p>Create your account and profile.</p>
       </div>
 
       <div class="auth-buttons">
-        <button type="button" id="googleSignup" class="chip-btn">Continue with Google</button>
-        <button type="button" id="appleSignup" class="chip-btn">Continue with Apple</button>
+        <a
+          id="googleSignup"
+          class="chip-btn auth-link"
+          href="https://accounts.google.com/signin/v2/identifier?continue=https%3A%2F%2Fsamivxw-cpu.github.io%2FFaceMash%2F"
+          target="_blank"
+          rel="noopener"
+        >
+          Continue with Google
+        </a>
+        <a
+          id="appleSignup"
+          class="chip-btn auth-link"
+          href="https://appleid.apple.com/"
+          target="_blank"
+          rel="noopener"
+        >
+          Continue with Apple
+        </a>
       </div>
 
       <form id="profileForm" class="profile-form" novalidate>
@@ -168,7 +175,7 @@
         </label>
 
         <label>
-          Best photo
+          Your photo
           <input type="file" id="profilePhoto" accept="image/*">
         </label>
 
@@ -180,24 +187,33 @@
     </section>
   </main>
 
+  <section class="bottom-authors">
+    <div class="bottom-authors-inner">
+      <strong>FaceMash by Benabdelmalek Sami</strong>
+      <span>Created in 2026</span>
+      <a href="authors.html">Author page</a>
+    </div>
+  </section>
+
   <footer class="site-footer">
     <div class="footer-inner">
       <span>FaceMash by Benabdelmalek Sami</span>
-      <a href="#" id="cookieSettingsLink">Cookies</a>
+      <a href="cookies.html">Cookies & Legal</a>
+      <a href="authors.html">Authors</a>
       <span>Created in 2026</span>
     </div>
   </footer>
 
-  <section id="cookieBanner" class="cookie-banner hidden" aria-live="polite">
-    <p>FaceMash uses cookies to save preferences and improve your experience.</p>
-    <div class="cookie-actions">
-      <button type="button" id="cookieReject" class="cookie-btn secondary">Reject</button>
-      <button type="button" id="cookieAccept" class="cookie-btn primary">Accept all</button>
-    </div>
-  </section>
+  <div id="cookie-banner" class="cookie-banner hidden">
+    Ce site utilise des cookies pour ameliorer votre experience.
+    <button onclick="acceptCookies()">Accepter</button>
+    <button onclick="rejectCookies()">Refuser</button>
+    <a href="cookies.html">En savoir plus</a>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/jsvectormap?v=20260307c"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js?v=20260307c"></script>
-  <script src="script.js?v=20260307c" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/jsvectormap.min.js?v=20260307e"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js?v=20260307e"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world-merc.js?v=20260307e"></script>
+  <script src="script.js?v=20260307e" defer></script>
 </body>
 </html>

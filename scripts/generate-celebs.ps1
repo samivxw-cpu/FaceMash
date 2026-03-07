@@ -1,9 +1,9 @@
 ﻿$ErrorActionPreference = "Stop"
 
 $userAgent = @{ "User-Agent" = "facemash-bot/2026 (known living profiles)" }
-$limit = 500
-$maxOffset = 4000
-$sitelinksMin = 30
+$limit = 250
+$maxOffset = 700
+$sitelinksMin = 65
 
 $continentByQid = @{
   "Q15" = "africa"
@@ -15,17 +15,18 @@ $continentByQid = @{
 }
 
 $occupationQids = @(
-  "Q82594",    # computer scientist
+  "Q33999",    # actor
+  "Q177220",   # singer
+  "Q133311",   # rapper
+  "Q639669",   # musician
+  "Q937857",   # football player
+  "Q2066131",  # athlete
   "Q82955",    # politician
   "Q6831",     # billionaire
-  "Q2066131",  # athlete
-  "Q43845",    # businessperson
-  "Q131524",   # entrepreneur
   "Q2906862",  # influencer
-  "Q2045208",  # internet celebrity
   "Q17125263", # YouTuber
   "Q57414145", # online streamer
-  "Q50279140"  # Twitch streamer
+  "Q82594"     # computer scientist
 )
 
 $genderMap = @{
@@ -39,12 +40,12 @@ function Invoke-Sparql {
   $encoded = [uri]::EscapeDataString($Query)
   $url = "https://query.wikidata.org/sparql?format=json&query=$encoded"
 
-  for ($try = 1; $try -le 5; $try++) {
+  for ($try = 1; $try -le 4; $try++) {
     try {
       $res = Invoke-RestMethod -Uri $url -Headers $userAgent -TimeoutSec 120
       return $res.results.bindings
     } catch {
-      if ($try -eq 5) {
+      if ($try -eq 4) {
         return @()
       }
       Start-Sleep -Seconds (2 * $try)
@@ -153,7 +154,7 @@ foreach ($genderQid in $genderMap.Keys) {
       if (-not $rows.Count) { break }
 
       Add-Rows -Store $store -Rows $rows -Gender $genderName
-      Start-Sleep -Milliseconds 300
+      Start-Sleep -Milliseconds 250
     }
   }
 
@@ -163,7 +164,7 @@ foreach ($genderQid in $genderMap.Keys) {
     if (-not $rows.Count) { break }
 
     Add-Rows -Store $store -Rows $rows -Gender $genderName
-    Start-Sleep -Milliseconds 300
+    Start-Sleep -Milliseconds 250
   }
 }
 
@@ -213,7 +214,7 @@ for ($i = 0; $i -lt $countryIds.Count; $i += 45) {
     }
   }
 
-  Start-Sleep -Milliseconds 200
+  Start-Sleep -Milliseconds 150
 }
 
 $final = foreach ($row in $raw) {
@@ -233,21 +234,7 @@ $final = foreach ($row in $raw) {
   }
 }
 
-$final = $final |
-  Sort-Object continent, countryName, gender, @{Expression='sitelinks';Descending=$true}, name |
-  ForEach-Object {
-    [pscustomobject]@{
-      id = $_.id
-      name = $_.name
-      image = $_.image
-      gender = $_.gender
-      continent = $_.continent
-      countryId = $_.countryId
-      countryName = $_.countryName
-      countryCode = $_.countryCode
-      score = $_.score
-    }
-  }
+$final = $final | Sort-Object @{Expression='sitelinks';Descending=$true}, continent, countryName, gender, name
 
 $final | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 "celebs.json"
 
@@ -255,7 +242,4 @@ $contStats = $final | Group-Object continent | Sort-Object Name | ForEach-Object
 "total=$($final.Count)" | Write-Output
 "male=$((($final | Where-Object gender -eq 'male').Count)) female=$((($final | Where-Object gender -eq 'female').Count))" | Write-Output
 "continents=" + ($contStats -join ",") | Write-Output
-
-
-
-
+"min_sitelinks=$sitelinksMin" | Write-Output
