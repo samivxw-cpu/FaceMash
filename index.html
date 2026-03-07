@@ -4,200 +4,71 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FaceMash</title>
-  <meta name="description" content="FaceMash lets users compare public profiles and vote in live rankings by country and continent.">
-  <meta name="keywords" content="FaceMash, celebrity voting, world ranking, actors, footballers, influencers">
+  <meta name="description" content="FaceMash is an interactive platform to compare public profiles and vote in live rankings.">
   <meta property="og:title" content="FaceMash">
-  <meta property="og:description" content="Compare public profiles, vote, and explore rankings by country and continent.">
+  <meta property="og:description" content="Compare profiles, vote, and explore world rankings.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="https://samivxw-cpu.github.io/FaceMash/logo.svg">
   <meta property="og:url" content="https://samivxw-cpu.github.io/FaceMash/">
+  <meta property="og:image" content="https://samivxw-cpu.github.io/FaceMash/logo.svg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="FaceMash">
-  <meta name="twitter:description" content="World profile voting and rankings.">
+  <meta name="twitter:description" content="Compare profiles and vote in live rankings.">
   <meta name="twitter:image" content="https://samivxw-cpu.github.io/FaceMash/logo.svg">
-  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260307e">
-  <link rel="apple-touch-icon" href="logo.svg?v=20260307e">
-  <link rel="manifest" href="site.webmanifest?v=20260307e">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css?v=20260307e">
-  <link rel="stylesheet" href="style.css?v=20260307e">
+  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260307f">
+  <link rel="manifest" href="site.webmanifest?v=20260307f">
+  <link rel="stylesheet" href="style.css?v=20260307f">
 </head>
-<body>
+<body data-page="home">
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="index.html" aria-label="FaceMash home">
-        <img src="logo.svg?v=20260307e" alt="FaceMash logo" class="logo" width="40" height="40">
+        <img src="logo.svg?v=20260307f" alt="FaceMash logo" class="logo" width="40" height="40">
         <span>FaceMash</span>
       </a>
-
-      <div class="header-right">
-        <nav class="header-tabs" aria-label="Main tabs">
-          <button type="button" id="tabBattle" class="tab-btn" onclick="setView('battle')">Battle</button>
-          <button type="button" id="tabRanking" class="tab-btn" onclick="setView('ranking')">Ranking</button>
-        </nav>
-        <a class="create-account-btn" href="#account-section">Create account</a>
-      </div>
+      <nav class="header-tabs" aria-label="Main navigation">
+        <a class="tab-link" href="battle.html">Battle</a>
+        <a class="tab-link" href="ranking.html">Ranking</a>
+        <a class="tab-link" href="map.html">Map</a>
+        <a class="tab-link" href="account.html">Create account</a>
+      </nav>
     </div>
   </header>
 
   <main class="page">
     <section class="hero">
-      <h1>Choose the profile you prefer.</h1>
-      <p class="subline" id="questionLine">Who is more handsome, left or right?</p>
-
-      <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
-        <button type="button" id="modeMale" class="chip-btn" onclick="setGender('male')">Men</button>
-        <button type="button" id="modeFemale" class="chip-btn" onclick="setGender('female')">Women</button>
+      <h1>Welcome to FaceMash</h1>
+      <p class="subline">Who stands out the most? Vote and discover live world rankings.</p>
+      <div class="filter-tabs">
+        <a class="chip-btn" href="battle.html">Start Battle</a>
+        <a class="chip-btn" href="ranking.html">See Rankings</a>
+        <a class="chip-btn" href="map.html">Open World Map</a>
+        <a class="chip-btn" href="account.html">Create Profile</a>
       </div>
-
-      <div class="filter-tabs" id="continentTabs" role="tablist" aria-label="Continent tabs"></div>
-      <p id="status" class="status"></p>
     </section>
 
-    <section id="battleView">
-      <section class="battle" id="battle">
-        <article class="face-card" onclick="vote('left')">
-          <img id="imgLeft" alt="Left profile" loading="lazy">
-          <h2 id="nameLeft"></h2>
-          <p id="countryLeft" class="country-line"></p>
-        </article>
-
-        <div class="versus">OR</div>
-
-        <article class="face-card" onclick="vote('right')">
-          <img id="imgRight" alt="Right profile" loading="lazy">
-          <h2 id="nameRight"></h2>
-          <p id="countryRight" class="country-line"></p>
-        </article>
-      </section>
-
-      <section class="rankings top10-only">
-        <article class="ranking-panel">
-          <h3 id="maleTopTitle">Top 10 Men</h3>
-          <ol id="rankingMaleTop"></ol>
-        </article>
-
-        <article class="ranking-panel">
-          <h3 id="femaleTopTitle">Top 10 Women</h3>
-          <ol id="rankingFemaleTop"></ol>
-        </article>
-      </section>
-    </section>
-
-    <section id="rankingView" class="hidden">
-      <section class="rankings full-rankings">
-        <article class="ranking-panel">
-          <h3 id="maleRankingTitle">World Men Ranking</h3>
-          <ol id="rankingMaleFull"></ol>
-        </article>
-
-        <article class="ranking-panel">
-          <h3 id="femaleRankingTitle">World Women Ranking</h3>
-          <ol id="rankingFemaleFull"></ol>
-        </article>
-      </section>
-    </section>
-
-    <section class="map-wrap">
-      <div class="map-head">
-        <h3>Global FaceMap</h3>
-        <p>Click a country to view its top current profile.</p>
-      </div>
-      <div id="worldMap" class="world-map" aria-label="World map"></div>
-      <article id="countrySpotlight" class="country-spotlight">
-        <p>Select a country on the map.</p>
-      </article>
-    </section>
-
-    <section class="gallery-wrap">
-      <div class="gallery-head">
-        <h3 id="galleryTitle">Celebrity Gallery</h3>
-        <p id="galleryCount"></p>
-      </div>
-      <div id="gallery" class="gallery"></div>
-      <button type="button" id="loadMoreBtn" class="load-more" onclick="loadMoreGallery()">Load more</button>
-    </section>
-
-    <section id="account-section" class="account-wrap">
-      <div class="account-head">
-        <h3>FaceMash by Benabdelmalek Sami</h3>
-        <p>Create your account and profile.</p>
-      </div>
-
-      <div class="auth-buttons">
-        <a
-          id="googleSignup"
-          class="chip-btn auth-link"
-          href="https://accounts.google.com/signin/v2/identifier?continue=https%3A%2F%2Fsamivxw-cpu.github.io%2FFaceMash%2F"
-          target="_blank"
-          rel="noopener"
-        >
-          Continue with Google
-        </a>
-        <a
-          id="appleSignup"
-          class="chip-btn auth-link"
-          href="https://appleid.apple.com/"
-          target="_blank"
-          rel="noopener"
-        >
-          Continue with Apple
-        </a>
-      </div>
-
-      <form id="profileForm" class="profile-form" novalidate>
-        <label>
-          Full name
-          <input type="text" id="profileName" required>
-        </label>
-
-        <label>
-          Email
-          <input type="email" id="profileEmail" required>
-        </label>
-
-        <label>
-          Date of birth
-          <input type="date" id="profileBirth" required>
-        </label>
-
-        <label>
-          Relationship status
-          <select id="profileRelation" required>
-            <option value="single">Single</option>
-            <option value="in_relationship">In a relationship</option>
-            <option value="married">Married</option>
-          </select>
-        </label>
-
-        <label>
-          Country
-          <select id="profileCountry" required></select>
-        </label>
-
-        <label>
-          Your photo
-          <input type="file" id="profilePhoto" accept="image/*">
-        </label>
-
-        <button type="submit" class="chip-btn profile-submit">Save profile</button>
-      </form>
-
-      <p id="profileMsg" class="profile-msg"></p>
-      <img id="profilePreview" class="profile-preview hidden" alt="Profile preview">
+    <section class="home-grid">
+      <a class="home-card" href="battle.html">
+        <h2>Battle</h2>
+        <p>Vote between two profiles with strict mode: men vs men, women vs women.</p>
+      </a>
+      <a class="home-card" href="ranking.html">
+        <h2>Ranking</h2>
+        <p>View global and continent rankings, split by men and women.</p>
+      </a>
+      <a class="home-card" href="map.html">
+        <h2>Planisphere</h2>
+        <p>Click a country and see the top profile with flag and name.</p>
+      </a>
+      <a class="home-card" href="account.html">
+        <h2>Account</h2>
+        <p>Create your profile with age check and identity document upload.</p>
+      </a>
     </section>
   </main>
 
-  <section class="bottom-authors">
-    <div class="bottom-authors-inner">
-      <strong>FaceMash by Benabdelmalek Sami</strong>
-      <span>Created in 2026</span>
-      <a href="authors.html">Author page</a>
-    </div>
-  </section>
-
   <footer class="site-footer">
     <div class="footer-inner">
-      <span>FaceMash by Benabdelmalek Sami</span>
+      <span>FaceMash</span>
       <a href="cookies.html">Cookies & Legal</a>
       <a href="authors.html">Authors</a>
       <span>Created in 2026</span>
@@ -211,9 +82,6 @@
     <a href="cookies.html">En savoir plus</a>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/jsvectormap.min.js?v=20260307e"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js?v=20260307e"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world-merc.js?v=20260307e"></script>
-  <script src="script.js?v=20260307e" defer></script>
+  <script src="script.js?v=20260307f" defer></script>
 </body>
 </html>

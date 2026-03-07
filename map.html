@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FaceMash - Authors</title>
-  <meta name="description" content="Author page for FaceMash.">
+  <title>FaceMash - World Map</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260307f">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css?v=20260307f">
   <link rel="stylesheet" href="style.css?v=20260307f">
 </head>
-<body>
+<body data-page="map">
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="index.html" aria-label="FaceMash home">
@@ -18,24 +18,27 @@
       <nav class="header-tabs" aria-label="Main navigation">
         <a class="tab-link" href="battle.html">Battle</a>
         <a class="tab-link" href="ranking.html">Ranking</a>
-        <a class="tab-link" href="map.html">Map</a>
+        <a class="tab-link active-link" href="map.html">Map</a>
         <a class="tab-link" href="account.html">Create account</a>
       </nav>
     </div>
   </header>
 
   <main class="page">
-    <section class="authors-wrap">
-      <h1>Authors</h1>
-      <article>
-        <h2>FaceMash Project</h2>
-        <p>Created in 2026.</p>
-        <p>FaceMash is an interactive platform where users compare two public profiles and vote in live rankings.</p>
-      </article>
+    <section class="hero">
+      <h1>Global FaceMap</h1>
+      <p class="subline">Click a country to view its top current profile.</p>
+      <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
+        <button type="button" id="modeMale" class="chip-btn" onclick="setGender('male')">Men</button>
+        <button type="button" id="modeFemale" class="chip-btn" onclick="setGender('female')">Women</button>
+      </div>
+      <p id="status" class="status"></p>
+    </section>
 
-      <article>
-        <h2>Contact</h2>
-        <p>Email: <a href="mailto:facemash.eu@gmail.com">facemash.eu@gmail.com</a></p>
+    <section class="map-wrap">
+      <div id="worldMap" class="world-map" aria-label="World map"></div>
+      <article id="countrySpotlight" class="country-spotlight">
+        <p>Select a country on the map.</p>
       </article>
     </section>
   </main>

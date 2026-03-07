@@ -1,0 +1,118 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FaceMash - Create Account</title>
+  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260307f">
+  <link rel="stylesheet" href="style.css?v=20260307f">
+</head>
+<body data-page="account">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html" aria-label="FaceMash home">
+        <img src="logo.svg?v=20260307f" alt="FaceMash logo" class="logo" width="40" height="40">
+        <span>FaceMash</span>
+      </a>
+      <nav class="header-tabs" aria-label="Main navigation">
+        <a class="tab-link" href="battle.html">Battle</a>
+        <a class="tab-link" href="ranking.html">Ranking</a>
+        <a class="tab-link" href="map.html">Map</a>
+        <a class="tab-link active-link" href="account.html">Create account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="account-wrap">
+      <div class="account-head">
+        <h1>Create your FaceMash account</h1>
+        <p>Sign in and complete your profile.</p>
+      </div>
+
+      <div class="auth-buttons">
+        <a id="googleSignup" class="chip-btn auth-link" href="https://accounts.google.com/signin" target="_blank" rel="noopener">Continue with Google</a>
+        <a id="appleSignup" class="chip-btn auth-link" href="https://appleid.apple.com/sign-in" target="_blank" rel="noopener">Continue with Apple</a>
+      </div>
+
+      <form id="profileForm" class="profile-form" novalidate>
+        <label>
+          Full name
+          <input type="text" id="profileName" required>
+        </label>
+
+        <label>
+          Email
+          <input type="email" id="profileEmail" required>
+        </label>
+
+        <label>
+          Date of birth
+          <input type="date" id="profileBirth" required>
+        </label>
+
+        <label>
+          Relationship status
+          <select id="profileRelation" required>
+            <option value="single">Single</option>
+            <option value="in_relationship">In a relationship</option>
+            <option value="married">Married</option>
+          </select>
+        </label>
+
+        <label>
+          Country
+          <select id="profileCountry" required></select>
+        </label>
+
+        <label>
+          Best photo
+          <input type="file" id="profilePhoto" accept="image/*" required>
+        </label>
+
+        <label>
+          ID document type
+          <select id="identityType" required>
+            <option value="">Select type</option>
+            <option value="id_card">Identity card</option>
+            <option value="passport">Passport</option>
+          </select>
+        </label>
+
+        <label>
+          Upload ID document
+          <input type="file" id="identityFile" accept="image/*,.pdf" required>
+        </label>
+
+        <label class="full-line checkbox-line">
+          <input type="checkbox" id="ageDeclaration" required>
+          I confirm that I am at least the legal age in my country and that my document is valid.
+        </label>
+
+        <button type="submit" class="chip-btn profile-submit">Submit profile</button>
+      </form>
+
+      <p id="profileMsg" class="profile-msg"></p>
+      <img id="profilePreview" class="profile-preview hidden" alt="Profile preview">
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>FaceMash</span>
+      <a href="cookies.html">Cookies & Legal</a>
+      <a href="authors.html">Authors</a>
+      <span>Created in 2026</span>
+    </div>
+  </footer>
+
+  <div id="cookie-banner" class="cookie-banner hidden">
+    Ce site utilise des cookies pour ameliorer votre experience.
+    <button onclick="acceptCookies()">Accepter</button>
+    <button onclick="rejectCookies()">Refuser</button>
+    <a href="cookies.html">En savoir plus</a>
+  </div>
+
+  <script src="script.js?v=20260307f" defer></script>
+</body>
+</html>

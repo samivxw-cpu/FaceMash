@@ -5,22 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FaceMash - Cookies & Mentions legales</title>
   <meta name="description" content="Cookies policy and legal notice for FaceMash.">
-  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260307e">
-  <link rel="stylesheet" href="style.css?v=20260307e">
+  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260307f">
+  <link rel="stylesheet" href="style.css?v=20260307f">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="index.html" aria-label="FaceMash home">
-        <img src="logo.svg?v=20260307e" alt="FaceMash logo" class="logo" width="40" height="40">
+        <img src="logo.svg?v=20260307f" alt="FaceMash logo" class="logo" width="40" height="40">
         <span>FaceMash</span>
       </a>
-      <div class="header-right">
-        <nav class="header-tabs" aria-label="Main tabs">
-          <a class="tab-link" href="index.html">Battle</a>
-          <a class="tab-link" href="authors.html">Authors</a>
-        </nav>
-      </div>
+      <nav class="header-tabs" aria-label="Main navigation">
+        <a class="tab-link" href="battle.html">Battle</a>
+        <a class="tab-link" href="ranking.html">Ranking</a>
+        <a class="tab-link" href="map.html">Map</a>
+        <a class="tab-link" href="account.html">Create account</a>
+      </nav>
     </div>
   </header>
 
@@ -109,21 +109,22 @@
     </section>
   </main>
 
-  <section class="bottom-authors">
-    <div class="bottom-authors-inner">
-      <strong>FaceMash by Benabdelmalek Sami</strong>
-      <span>Created in 2026</span>
-      <a href="authors.html">Author page</a>
-    </div>
-  </section>
-
   <footer class="site-footer">
     <div class="footer-inner">
-      <span>FaceMash by Benabdelmalek Sami</span>
+      <span>FaceMash</span>
       <a href="cookies.html">Cookies & Legal</a>
       <a href="authors.html">Authors</a>
       <span>Created in 2026</span>
     </div>
   </footer>
+
+  <div id="cookie-banner" class="cookie-banner hidden">
+    Ce site utilise des cookies pour ameliorer votre experience.
+    <button onclick="acceptCookies()">Accepter</button>
+    <button onclick="rejectCookies()">Refuser</button>
+    <a href="cookies.html">En savoir plus</a>
+  </div>
+
+  <script src="script.js?v=20260307f" defer></script>
 </body>
 </html>

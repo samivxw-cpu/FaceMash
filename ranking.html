@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FaceMash - Authors</title>
-  <meta name="description" content="Author page for FaceMash.">
+  <title>FaceMash - Ranking</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260307f">
   <link rel="stylesheet" href="style.css?v=20260307f">
 </head>
-<body>
+<body data-page="ranking">
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="index.html" aria-label="FaceMash home">
@@ -17,7 +16,7 @@
       </a>
       <nav class="header-tabs" aria-label="Main navigation">
         <a class="tab-link" href="battle.html">Battle</a>
-        <a class="tab-link" href="ranking.html">Ranking</a>
+        <a class="tab-link active-link" href="ranking.html">Ranking</a>
         <a class="tab-link" href="map.html">Map</a>
         <a class="tab-link" href="account.html">Create account</a>
       </nav>
@@ -25,17 +24,25 @@
   </header>
 
   <main class="page">
-    <section class="authors-wrap">
-      <h1>Authors</h1>
-      <article>
-        <h2>FaceMash Project</h2>
-        <p>Created in 2026.</p>
-        <p>FaceMash is an interactive platform where users compare two public profiles and vote in live rankings.</p>
-      </article>
+    <section class="hero">
+      <h1>Global Ranking</h1>
+      <p class="subline">Browse rankings by continent and gender.</p>
+      <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
+        <button type="button" id="modeMale" class="chip-btn" onclick="setGender('male')">Men</button>
+        <button type="button" id="modeFemale" class="chip-btn" onclick="setGender('female')">Women</button>
+      </div>
+      <div class="filter-tabs" id="continentTabs" role="tablist" aria-label="Continent tabs"></div>
+      <p id="status" class="status"></p>
+    </section>
 
-      <article>
-        <h2>Contact</h2>
-        <p>Email: <a href="mailto:facemash.eu@gmail.com">facemash.eu@gmail.com</a></p>
+    <section class="rankings">
+      <article class="ranking-panel">
+        <h3 id="maleRankingTitle">World Men Ranking</h3>
+        <ol id="rankingMaleFull"></ol>
+      </article>
+      <article class="ranking-panel">
+        <h3 id="femaleRankingTitle">World Women Ranking</h3>
+        <ol id="rankingFemaleFull"></ol>
       </article>
     </section>
   </main>
