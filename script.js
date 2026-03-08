@@ -1,11 +1,17 @@
 const K = 32;
 const DEFAULT_SCORE = 1200;
+const MIN_SCORE = 800;
+const MAX_SCORE = 2600;
 const AFRICA_MIN_TAB_COUNT = 300;
 const MAX_ACTIVE_PROFILES = 5000;
 const MIN_FAME_SCORE = 45;
 const FALLBACK_IMG = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
 const MAX_RECENT_IDS = 48;
 const MAX_RECENT_PAIRS = 320;
+const FACEMASH_SCORE_BAND = 160;
+const FACEMASH_ANCHOR_POOL = 180;
+const FACEMASH_ANCHOR_WINDOW = 36;
+const FACEMASH_CHALLENGER_WINDOW = 28;
 
 const CONTINENT_ORDER = ["world", "africa", "asia", "europe", "north-america", "south-america", "oceania"];
 const CONTINENT_LABEL = {
@@ -86,12 +92,32 @@ function expectedScore(a, b) {
   return 1 / (1 + Math.pow(10, (b - a) / 400));
 }
 
+function clampScore(value) {
+  return Math.max(MIN_SCORE, Math.min(MAX_SCORE, Math.round(value)));
+}
+
+function dynamicK(player, expected, isUpset) {
+  const votes = player?.votes || 0;
+  let k = K;
+
+  if (votes < 20) k += 10;
+  if (votes > 180) k -= 8;
+  if (isUpset) k += 6;
+  if (expected > 0.82 || expected < 0.18) k -= 3;
+
+  return Math.max(18, Math.min(52, k));
+}
+
 function updateElo(winner, loser) {
   const expectedWinner = expectedScore(winner.score, loser.score);
-  const expectedLoser = expectedScore(loser.score, winner.score);
+  const expectedLoser = 1 - expectedWinner;
+  const upset = expectedWinner < 0.5;
+  const upsetBoost = upset ? 1.2 : 1;
+  const winnerK = dynamicK(winner, expectedWinner, upset) * upsetBoost;
+  const loserK = dynamicK(loser, expectedLoser, upset) * upsetBoost;
 
-  winner.score = Math.round(winner.score + K * (1 - expectedWinner));
-  loser.score = Math.round(loser.score + K * (0 - expectedLoser));
+  winner.score = clampScore(winner.score + winnerK * (1 - expectedWinner));
+  loser.score = clampScore(loser.score + loserK * (0 - expectedLoser));
   winner.votes = (winner.votes || 0) + 1;
   loser.votes = (loser.votes || 0) + 1;
 }
@@ -245,7 +271,7 @@ function markShown(person) {
   rememberId(person.id);
 }
 
-function pickCandidate(pool, excludeIds = []) {
+function pickFallbackCandidate(pool, excludeIds = []) {
   if (!pool.length) return null;
 
   const exclude = new Set(excludeIds.filter(Boolean));
@@ -269,6 +295,66 @@ function pickCandidate(pool, excludeIds = []) {
 
   const windowSize = Math.min(40, candidates.length);
   const shortList = candidates.slice(0, windowSize);
+  return shortList[Math.floor(Math.random() * shortList.length)];
+}
+
+function pickAnchorCandidate(pool, excludeIds = []) {
+  if (!pool.length) return null;
+
+  const exclude = new Set(excludeIds.filter(Boolean));
+  let candidates = pool.filter((p) => !exclude.has(p.id));
+  if (!candidates.length) return null;
+
+  const nonRecent = candidates.filter((p) => !recentIds.includes(p.id));
+  if (nonRecent.length >= 16) candidates = nonRecent;
+
+  candidates.sort((a, b) => {
+    const scoreA = a.score || DEFAULT_SCORE;
+    const scoreB = b.score || DEFAULT_SCORE;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+
+    const votesA = a.votes || 0;
+    const votesB = b.votes || 0;
+    if (votesA !== votesB) return votesA - votesB;
+
+    return (b.popularity || 0) - (a.popularity || 0);
+  });
+
+  const topPool = candidates.slice(0, Math.min(FACEMASH_ANCHOR_POOL, candidates.length));
+  const windowSize = Math.min(FACEMASH_ANCHOR_WINDOW, topPool.length);
+  const shortList = topPool.slice(0, windowSize);
+  return shortList[Math.floor(Math.random() * shortList.length)];
+}
+
+function pickClosestCandidate(pool, target, excludeIds = []) {
+  if (!pool.length || !target) return null;
+
+  const exclude = new Set([target.id, ...excludeIds].filter(Boolean));
+  let candidates = pool.filter((p) => !exclude.has(p.id));
+  if (!candidates.length) return null;
+
+  const nonRecent = candidates.filter((p) => !recentIds.includes(p.id));
+  if (nonRecent.length >= 10) candidates = nonRecent;
+
+  const targetScore = target.score || DEFAULT_SCORE;
+  candidates.sort((a, b) => {
+    const aGap = Math.abs((a.score || DEFAULT_SCORE) - targetScore);
+    const bGap = Math.abs((b.score || DEFAULT_SCORE) - targetScore);
+    if (aGap !== bGap) return aGap - bGap;
+
+    const shownA = a.shown || 0;
+    const shownB = b.shown || 0;
+    if (shownA !== shownB) return shownA - shownB;
+
+    return (b.popularity || 0) - (a.popularity || 0);
+  });
+
+  const scoreBand = candidates.filter(
+    (c) => Math.abs((c.score || DEFAULT_SCORE) - targetScore) <= FACEMASH_SCORE_BAND
+  );
+  const source = scoreBand.length >= 6 ? scoreBand : candidates;
+  const windowSize = Math.min(FACEMASH_CHALLENGER_WINDOW, source.length);
+  const shortList = source.slice(0, windowSize);
   return shortList[Math.floor(Math.random() * shortList.length)];
 }
 
@@ -314,10 +400,12 @@ function chooseTwoProfiles(pool) {
   if (pool.length < 2) return [null, null];
 
   for (let i = 0; i < 24; i += 1) {
-    const first = pickCandidate(pool, recentIds);
+    const first = pickAnchorCandidate(pool, recentIds) || pickFallbackCandidate(pool, recentIds);
     if (!first) break;
 
-    const second = pickCandidate(pool, [first.id, ...recentIds]);
+    const second =
+      pickClosestCandidate(pool, first, recentIds) ||
+      pickFallbackCandidate(pool, [first.id, ...recentIds]);
     if (!second) continue;
 
     if (!wasPairRecentlyUsed(first, second)) {
@@ -325,11 +413,8 @@ function chooseTwoProfiles(pool) {
     }
   }
 
-  const randomA = pool[Math.floor(Math.random() * pool.length)];
-  let randomB = pool[Math.floor(Math.random() * pool.length)];
-  while (randomB && randomA && randomB.id === randomA.id) {
-    randomB = pool[Math.floor(Math.random() * pool.length)];
-  }
+  const randomA = pickFallbackCandidate(pool);
+  const randomB = pickFallbackCandidate(pool, [randomA?.id]);
   return [randomA, randomB];
 }
 
@@ -358,12 +443,14 @@ function pickChallenger(winner) {
   if (pool.length < 2 || !winner) return null;
 
   for (let i = 0; i < 30; i += 1) {
-    const candidate = pickCandidate(pool, [winner.id, ...recentIds]);
+    const candidate =
+      pickClosestCandidate(pool, winner, recentIds) ||
+      pickFallbackCandidate(pool, [winner.id, ...recentIds]);
     if (!candidate) continue;
     if (!wasPairRecentlyUsed(candidate, winner)) return candidate;
   }
 
-  return pickCandidate(pool, [winner.id]);
+  return pickClosestCandidate(pool, winner) || pickFallbackCandidate(pool, [winner.id]);
 }
 
 function continueRoundKeepingWinner(side) {
