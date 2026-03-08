@@ -193,7 +193,7 @@ function wasPairRecentlyUsed(a, b) {
 function updateQuestionLine() {
   const line = el("questionLine");
   if (!line) return;
-  line.textContent = "Which profile do you prefer, left or right?";
+  line.textContent = "Which profile wins this round?";
 }
 
 function updateModeButtons() {

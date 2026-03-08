@@ -753,60 +753,53 @@ body {
   }
 }
 
-/* Battle full-page redesign */
-.tab-link,
-.chip-btn,
-.load-more,
-.cookie-banner button,
-.cookie-banner a {
-  border-radius: 0;
-}
-
+/* Battle redesign inspired by account page */
 body.battle-classic {
-  font-family: Arial, Helvetica, sans-serif;
-  background: linear-gradient(180deg, #e8e8e8 0%, #d7d7d7 100%);
-  color: #111111;
+  font-family: "Source Sans 3", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #171717;
+  background:
+    radial-gradient(circle at 12% -5%, rgba(161, 15, 7, 0.12), transparent 30%),
+    radial-gradient(circle at 95% 5%, rgba(15, 141, 148, 0.09), transparent 27%),
+    linear-gradient(180deg, #ebe6df 0%, #f1ede7 58%, #e8e3db 100%);
   min-height: 100vh;
 }
 
 body.battle-classic .topbar {
   position: sticky;
   top: 0;
-  background: #8f1108;
-  border-top: 2px solid #5e0903;
-  border-bottom: 2px solid #5e0903;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 70;
+  background: linear-gradient(180deg, #a10f07 0%, #740903 100%);
+  border-bottom: 1px solid #5e0903;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.26);
 }
 
 body.battle-classic .topbar-inner {
   max-width: none;
   width: 100%;
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 12px 24px;
-  flex-wrap: nowrap;
+  gap: 12px;
 }
 
 body.battle-classic .brand {
-  gap: 0;
+  color: #ffffff;
+  text-decoration: none;
 }
 
 body.battle-classic .brand span {
-  font-family: Arial, Helvetica, sans-serif;
-  text-transform: uppercase;
-  font-size: clamp(2rem, 4.2vw, 2.5rem);
-  letter-spacing: 0.04em;
-  font-weight: 700;
-}
-
-body.battle-classic .logo {
-  display: none;
+  font-family: "Bebas Neue", "Source Sans 3", sans-serif;
+  font-size: clamp(2rem, 4.2vw, 2.6rem);
+  letter-spacing: 0.05em;
+  line-height: 1;
 }
 
 body.battle-classic .header-tabs {
   display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 body.battle-classic .header-tabs .tab-link {
@@ -814,40 +807,43 @@ body.battle-classic .header-tabs .tab-link {
   border-radius: 0;
   background: transparent;
   color: #ffffff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.76rem;
-  letter-spacing: 0.04em;
-  padding: 6px 10px;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  padding: 7px 12px;
 }
 
 body.battle-classic .header-tabs .tab-link:hover {
   border-color: #ffffff;
-  text-decoration: none;
+  background: transparent;
   transform: none;
+  text-decoration: none;
 }
 
 body.battle-classic .header-tabs .active-link {
+  border-color: #ffffff;
   background: #ffffff;
   color: #7f0c05;
-  border-color: #ffffff;
   box-shadow: none;
-  text-decoration: none;
 }
 
 body.battle-classic .headline-banner {
-  background: #f3e8e6;
-  border-bottom: 1px solid #c8b6b2;
-  border-top: 1px solid #e0d0cc;
-  padding: 8px 24px;
   text-align: center;
+  background: #fff6f3;
+  border-top: 1px solid #ead7d2;
+  border-bottom: 1px solid #ddc6bf;
+  padding: 9px 18px;
 }
 
 body.battle-classic .headline-banner p {
   margin: 0;
+  font-size: 0.84rem;
   color: #6b120b;
-  font-size: 0.86rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-weight: 800;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
@@ -855,7 +851,7 @@ body.battle-classic .page {
   max-width: none;
   width: 100%;
   margin: 0;
-  padding: 20px 24px 16px;
+  padding: 18px 20px 14px;
   border: 0;
   background: transparent;
 }
@@ -865,23 +861,22 @@ body.battle-classic .hero {
   border-radius: 0;
   box-shadow: none;
   background: transparent;
-  padding: 0;
   text-align: center;
+  padding: 0;
 }
 
 body.battle-classic .hero h1 {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: clamp(2rem, 4.5vw, 2.8rem);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #111111;
+  font-family: "Bebas Neue", "Source Sans 3", sans-serif;
+  letter-spacing: 0.03em;
+  font-size: clamp(2.1rem, 5vw, 3rem);
+  line-height: 1.05;
 }
 
 body.battle-classic .subline {
   margin-top: 6px;
-  color: #2f2f2f;
-  font-size: 1.03rem;
+  color: #3a3a3a;
+  font-size: 1.02rem;
   font-weight: 700;
 }
 
@@ -892,28 +887,30 @@ body.battle-classic .filter-tabs {
 }
 
 body.battle-classic .chip-btn {
-  border: 1px solid #7f7f7f;
+  border: 1px solid #9e8d7e;
   border-radius: 0;
-  color: #1f1f1f;
-  background: #f1f1f1;
-  padding: 7px 12px;
-  font-size: 0.8rem;
-  letter-spacing: 0.03em;
+  background: #ffffff;
+  color: #2f2f2f;
+  font-size: 0.82rem;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 7px 11px;
 }
 
 body.battle-classic .chip-btn:hover {
-  color: #111111;
-  background: #e9e9e9;
+  background: #f6f2ec;
+  border-color: #8f7965;
+  transform: none;
   text-decoration: none;
 }
 
 body.battle-classic .chip-btn.active {
+  background: linear-gradient(180deg, #ca2d20, #a10f07);
+  border-color: #6d0803;
   color: #ffffff;
-  background: #8f1108;
-  border-color: #5e0903;
-  text-decoration: none;
   box-shadow: none;
+  text-decoration: none;
 }
 
 body.battle-classic .status {
@@ -923,71 +920,67 @@ body.battle-classic .status {
 body.battle-classic .battle {
   margin-top: 18px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 66px minmax(0, 1fr);
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 body.battle-classic .face-card {
-  border: 1px solid #8e8e8e;
+  border: 1px solid #b8ad9f;
   border-radius: 0;
-  box-shadow: none;
   background: #ffffff;
-  padding: 10px;
-  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  padding: 8px;
 }
 
 body.battle-classic .face-card:hover {
+  border-color: #9b8673;
   transform: none;
-  border-color: #7f0c05;
-  box-shadow: none;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14);
 }
 
 body.battle-classic .face-card img {
   width: 100%;
   height: clamp(360px, 67vh, 760px);
   object-fit: cover;
-  border: 1px solid #b8b8b8;
+  border: 1px solid #d4d4d4;
   border-radius: 0;
-  background: #f1f1f1;
+  background: #f7f7f7;
 }
 
 body.battle-classic .face-card h2 {
-  margin: 10px 0 2px;
+  margin: 8px 0 2px;
   text-align: center;
-  font-size: 1.08rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  font-size: 1.07rem;
 }
 
 body.battle-classic .country-line {
   margin: 0;
   text-align: center;
-  color: #5f5f5f;
-  font-size: 0.89rem;
+  color: #666666;
+  font-size: 0.9rem;
 }
 
 body.battle-classic .versus {
   text-align: center;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: #6b120b;
-  letter-spacing: 0.03em;
+  font-family: "Bebas Neue", "Source Sans 3", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: 2rem;
+  color: #2a2a2a;
 }
 
 body.battle-classic .classic-links {
   margin-top: 10px;
   display: flex;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 body.battle-classic .classic-links a {
   color: #4b4b4b;
   text-decoration: none;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   border-bottom: 1px solid transparent;
 }
@@ -998,26 +991,28 @@ body.battle-classic .classic-links a:hover {
 
 body.battle-classic .site-footer {
   margin-top: 0;
-  border-top: 0;
   background: transparent;
+  border-top: 0;
 }
 
 body.battle-classic .footer-inner {
   max-width: none;
   min-height: 36px;
+  padding: 6px 20px 10px;
+  color: #5b5b5b;
+  font-size: 0.74rem;
   justify-content: center;
   gap: 12px;
-  padding: 4px 24px 10px;
-  font-size: 0.72rem;
-  color: #555555;
   background: transparent;
 }
 
 body.battle-classic .footer-inner a {
-  color: #555555;
+  color: #5b5b5b;
 }
 
-body.battle-classic .cookie-banner {
+body.battle-classic .cookie-banner,
+body.battle-classic .cookie-banner button,
+body.battle-classic .cookie-banner a {
   border-radius: 0;
 }
 
@@ -1030,24 +1025,19 @@ body.battle-classic .cookie-banner {
 
   body.battle-classic .header-tabs {
     justify-content: center;
-    width: 100%;
   }
 
   body.battle-classic .headline-banner {
-    padding: 8px 12px;
+    padding: 8px 10px;
   }
 
   body.battle-classic .page {
-    padding: 16px 10px 12px;
+    padding: 14px 10px 10px;
   }
 
   body.battle-classic .battle {
-    grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
     gap: 8px;
-  }
-
-  body.battle-classic .face-card {
-    padding: 6px;
   }
 
   body.battle-classic .face-card img {
