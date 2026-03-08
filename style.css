@@ -982,7 +982,7 @@ body.battle-classic .face-media {
 
 body.battle-classic .face-card img {
   width: 100%;
-  height: clamp(380px, 67vh, 780px);
+  height: clamp(250px, 46vh, 480px);
   object-fit: cover;
   border: 1px solid #565f71;
   border-radius: 0;
@@ -1133,7 +1133,8 @@ body.battle-classic .cookie-banner a {
   }
 
   body.battle-classic .face-card img {
-    height: clamp(260px, 50vh, 460px);
+    height: clamp(210px, 34vh, 300px);
     object-fit: contain;
   }
 }
+
