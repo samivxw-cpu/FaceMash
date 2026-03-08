@@ -1,16 +1,18 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FaceMash - Battle</title>
-  <link rel="stylesheet" href="style.css?v=20260308k">
+  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260308f">
+  <link rel="stylesheet" href="style.css?v=20260308f">
 </head>
-<body data-page="battle" class="battle-classic">
+<body data-page="battle">
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="battle.html" aria-label="FaceMash battle">
-        <span>FACEMASH</span>
+        <img src="logo.svg?v=20260308f" alt="FaceMash logo" class="logo" width="40" height="40">
+        <span>FaceMash</span>
       </a>
       <nav class="header-tabs" aria-label="Main navigation">
         <a class="tab-link active-link" href="battle.html">Battle</a>
@@ -20,30 +22,11 @@
     </div>
   </header>
 
-  <div class="headline-banner" role="note">
-    <p>Arrow Left or Arrow Right to vote fast. Rankings refresh live.</p>
-  </div>
-
-  <main class="page battle-layout">
+  <main class="page">
     <section class="hero">
-      <h1>Battle Arena</h1>
-      <p class="subline" id="questionLine">Which profile wins this round?</p>
-
-      <div class="battle-stats" aria-label="Battle stats">
-        <article class="stat-card">
-          <span class="stat-label">Active Pool</span>
-          <strong id="statsPool">-</strong>
-        </article>
-        <article class="stat-card">
-          <span class="stat-label">Total Votes</span>
-          <strong id="statsVotes">-</strong>
-        </article>
-        <article class="stat-card">
-          <span class="stat-label">Current Mode</span>
-          <strong id="statsMode">-</strong>
-        </article>
-      </div>
-
+      <p class="home-intro-line">Were we let in for our looks? No. Will we be judged on them? Yes.</p>
+      <h1>Who's Better? Click to Choose.</h1>
+      <p class="subline" id="questionLine">Who is more handsome, left or right?</p>
       <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
         <button type="button" id="modeMale" class="chip-btn" onclick="setGender('male')">Men</button>
         <button type="button" id="modeFemale" class="chip-btn" onclick="setGender('female')">Women</button>
@@ -53,42 +36,34 @@
     </section>
 
     <section class="battle" id="battle">
-      <article class="face-card" onclick="vote('left')" role="button" tabindex="0" aria-label="Vote left profile">
-        <div class="face-media">
-          <img id="imgLeft" alt="Left profile" loading="lazy">
-          <span class="vote-hint">Vote Left</span>
-        </div>
+      <article class="face-card" onclick="vote('left')">
+        <img id="imgLeft" alt="Left profile" loading="lazy">
         <h2 id="nameLeft">-</h2>
         <p id="countryLeft" class="country-line"></p>
       </article>
-
-      <div class="versus">
-        <span>VS</span>
-        <small>Choose one</small>
-      </div>
-
-      <article class="face-card" onclick="vote('right')" role="button" tabindex="0" aria-label="Vote right profile">
-        <div class="face-media">
-          <img id="imgRight" alt="Right profile" loading="lazy">
-          <span class="vote-hint">Vote Right</span>
-        </div>
+      <div class="versus">OR</div>
+      <article class="face-card" onclick="vote('right')">
+        <img id="imgRight" alt="Right profile" loading="lazy">
         <h2 id="nameRight">-</h2>
         <p id="countryRight" class="country-line"></p>
       </article>
     </section>
 
-    <nav class="classic-links" aria-label="Classic navigation">
-      <a href="battle.html">Home</a>
-      <a href="ranking.html">Ranking</a>
-      <a href="map.html">Map</a>
-      <a href="authors.html">About</a>
-      <a href="cookies.html">Legal</a>
-    </nav>
+    <section class="rankings">
+      <article class="ranking-panel">
+        <h3 id="maleTopTitle">Top 10 Men</h3>
+        <ol id="rankingMaleTop"></ol>
+      </article>
+      <article class="ranking-panel">
+        <h3 id="femaleTopTitle">Top 10 Women</h3>
+        <ol id="rankingFemaleTop"></ol>
+      </article>
+    </section>
   </main>
 
   <footer class="site-footer">
     <div class="footer-inner">
-      <span>FACEMASH</span>
+      <span>FaceMash</span>
       <a href="cookies.html">Cookies & Legal</a>
       <a href="authors.html">Authors</a>
       <span>Created in 2026</span>
@@ -102,7 +77,6 @@
     <a href="cookies.html">En savoir plus</a>
   </div>
 
-  <script src="script.js?v=20260308k" defer></script>
+  <script src="script.js?v=20260308f" defer></script>
 </body>
 </html>
-

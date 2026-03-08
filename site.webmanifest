@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "FaceMash",
   "short_name": "FaceMash",
   "description": "Compare celebrities and vote with live rankings.",
@@ -6,5 +6,12 @@
   "display": "standalone",
   "background_color": "#f8f1e6",
   "theme_color": "#b5140c",
-  "icons": []
+  "icons": [
+    {
+      "src": "logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
 }
