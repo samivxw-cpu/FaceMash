@@ -67,16 +67,21 @@
     </div>
   </footer>
 
-  <div id="cookie-banner" class="cookie-banner hidden">
-    Ce site utilise des cookies pour ameliorer votre experience.
-    <button onclick="acceptCookies()">Accepter</button>
-    <button onclick="rejectCookies()">Ne pas accepter</button>
-    <a href="cookies.html">En savoir plus</a>
+  <div id="cookie-banner" class="cookie-banner hidden" role="dialog" aria-live="polite" aria-label="Cookie consent">
+    <p class="cookie-text">Ce site utilise des cookies pour ameliorer votre experience.</p>
+    <div class="cookie-actions">
+      <button onclick="acceptCookies()">Accepter</button>
+      <button onclick="rejectCookies()">Ne pas accepter</button>
+      <a href="cookies.html">En savoir plus</a>
+    </div>
   </div>
 
   <script src="script.js?v=20260308m" defer></script>
 </body>
 </html>
+
+
+
 
 
 
