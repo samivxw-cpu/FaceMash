@@ -1,12 +1,13 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
-$userAgent = @{ "User-Agent" = "facemash-bot/2026 (known living global profiles)" }
-$targetCount = 5000
-$limit = 900
-$maxOffset = 54000
-$sitelinksMin = 45
-$generalSitelinksMin = 70
-$generalMaxOffset = 72000
+$userAgent = @{ "User-Agent" = "facemash-bot/2026 (known creators only)" }
+$targetCount = 700
+$limit = 350
+$maxOffset = 4200
+$strictSitelinksMin = 120
+$relaxedSitelinksMin = 95
+$maxAge = 42
+$minBirthDateIso = "1984-01-01T00:00:00Z"
 
 $continentByQid = @{
   "Q15" = "africa"
@@ -17,43 +18,35 @@ $continentByQid = @{
   "Q538" = "oceania"
 }
 
-$occupationQids = @(
-  "Q33999",    # actor
-  "Q10800557", # film actor
-  "Q177220",   # singer
+# Allowed focus: rappers, musicians, influencers, youtubers, streamers.
+$allowedOccupationQids = @(
   "Q133311",   # rapper
+  "Q177220",   # singer
   "Q639669",   # musician
   "Q488111",   # songwriter
   "Q189290",   # producer
-  "Q2526255",  # film director
-  "Q36180",    # writer
-  "Q1930187",  # journalist
-  "Q947873",   # tv presenter
-  "Q245068",   # comedian
-  "Q937857",   # football player
-  "Q3665646",  # basketball player
-  "Q10833314", # tennis player
-  "Q10841764", # Formula One driver
-  "Q131524",   # entrepreneur
-  "Q43845",    # businessperson
-  "Q6831",     # billionaire
-  "Q82955",    # politician
-  "Q30461",    # president
-  "Q2066131",  # athlete
-  "Q11513337", # esports player
   "Q2906862",  # influencer
   "Q2045208",  # internet celebrity
   "Q17125263", # YouTuber
   "Q57414145", # online streamer
   "Q50279140", # Twitch streamer
-  "Q82594",    # computer scientist
-  "Q13590141", # social media personality
-  "Q1028181",  # painter
-  "Q753110",   # photographer
-  "Q11247470", # television actor
-  "Q10798782", # television personality
-  "Q40348",    # lawyer
-  "Q15981151"  # model
+  "Q13590141"  # social media personality
+)
+
+# Hard exclusions requested by user.
+$blockedOccupationQids = @(
+  "Q33999",    # actor
+  "Q10800557", # film actor
+  "Q937857",   # football player
+  "Q3665646",  # basketball player
+  "Q10833314", # tennis player
+  "Q2066131",  # athlete
+  "Q11513337", # esports player
+  "Q82955",    # politician
+  "Q30461",    # president
+  "Q131524",   # entrepreneur
+  "Q43845",    # businessperson
+  "Q6831"      # billionaire
 )
 
 $genderMap = @{
@@ -69,66 +62,46 @@ function Invoke-Sparql {
 
   for ($try = 1; $try -le 5; $try++) {
     try {
-      $res = Invoke-RestMethod -Uri $url -Headers $userAgent -TimeoutSec 180
+      $res = Invoke-RestMethod -Uri $url -Headers $userAgent -TimeoutSec 120
       return $res.results.bindings
     } catch {
-      if ($try -eq 5) {
-        return @()
-      }
+      if ($try -eq 5) { return @() }
       Start-Sleep -Seconds (3 * $try)
     }
   }
 }
 
-function Build-BulkQuery {
-  param([int]$Offset)
-
-  $valuesOcc = ($occupationQids | ForEach-Object { "wd:$_" }) -join " "
-
-@"
-SELECT DISTINCT ?item ?itemLabel ?image ?country ?countryLabel ?gender ?sitelinks WHERE {
-  VALUES ?occ { $valuesOcc }
-  VALUES ?gender { wd:Q6581097 wd:Q6581072 }
-
-  ?item wdt:P31 wd:Q5;
-        wdt:P21 ?gender;
-        wdt:P18 ?image;
-        wdt:P27 ?country;
-        wdt:P106 ?occ;
-        wikibase:sitelinks ?sitelinks.
-
-  FILTER(?sitelinks >= $sitelinksMin)
-  FILTER NOT EXISTS { ?item wdt:P570 ?deathDate. }
-
-  ?article schema:about ?item;
-           schema:isPartOf <https://en.wikipedia.org/>.
-
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-}
-ORDER BY DESC(?sitelinks)
-LIMIT $limit
-OFFSET $Offset
-"@
-}
-
-function Build-GeneralQuery {
+function Build-KnownCreatorsQuery {
   param(
     [int]$Offset,
     [int]$MinSitelinks
   )
 
+  $valuesAllowed = ($allowedOccupationQids | ForEach-Object { "wd:$_" }) -join " "
+  $valuesBlocked = ($blockedOccupationQids | ForEach-Object { "wd:$_" }) -join " "
+
 @"
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 SELECT DISTINCT ?item ?itemLabel ?image ?country ?countryLabel ?gender ?sitelinks WHERE {
+  VALUES ?allowedOcc { $valuesAllowed }
+  VALUES ?blockedOcc { $valuesBlocked }
   VALUES ?gender { wd:Q6581097 wd:Q6581072 }
 
   ?item wdt:P31 wd:Q5;
         wdt:P21 ?gender;
         wdt:P18 ?image;
         wdt:P27 ?country;
+        wdt:P106 ?allowedOcc;
+        wdt:P569 ?birthDate;
         wikibase:sitelinks ?sitelinks.
 
   FILTER(?sitelinks >= $MinSitelinks)
+  FILTER(?birthDate >= "$minBirthDateIso"^^xsd:dateTime)
+  BIND(YEAR(NOW()) - YEAR(?birthDate) AS ?ageYears)
+  FILTER(?ageYears >= 18 && ?ageYears <= $maxAge)
+
   FILTER NOT EXISTS { ?item wdt:P570 ?deathDate. }
+  FILTER NOT EXISTS { ?item wdt:P106 ?blockedOcc. }
 
   ?article schema:about ?item;
            schema:isPartOf <https://en.wikipedia.org/>.
@@ -171,6 +144,7 @@ function Add-Rows {
       $Store[$id].sitelinks = $sitelinks
       $Store[$id].countryId = $countryId
       $Store[$id].countryName = $countryName
+      $Store[$id].image = ($row.image.value -replace '^http:', 'https:')
     }
   }
 }
@@ -185,7 +159,7 @@ function Invoke-WikidataClaims {
 
   for ($try = 1; $try -le 4; $try++) {
     try {
-      return Invoke-RestMethod -Uri $url -TimeoutSec 180
+      return Invoke-RestMethod -Uri $url -TimeoutSec 120
     } catch {
       if ($try -eq 4) { return $null }
       Start-Sleep -Seconds (2 * $try)
@@ -194,35 +168,12 @@ function Invoke-WikidataClaims {
 }
 
 $store = New-Object 'System.Collections.Generic.Dictionary[string, object]'
-$emptyBatches = 0
 
-for ($offset = 0; $offset -le $maxOffset; $offset += $limit) {
-  $query = Build-BulkQuery -Offset $offset
-  $rows = Invoke-Sparql -Query $query
-
-  if (-not $rows.Count) {
-    $emptyBatches += 1
-    if ($emptyBatches -ge 2) { break }
-    continue
-  }
-
-  $emptyBatches = 0
-  Add-Rows -Store $store -Rows $rows
-
-  "batch_offset=$offset fetched=$($rows.Count) unique=$($store.Count)" | Write-Output
-
-  if ($store.Count -ge ($targetCount + 1200) -and $offset -ge 4000) {
-    break
-  }
-
-  Start-Sleep -Milliseconds 400
-}
-
-if ($store.Count -lt $targetCount) {
+foreach ($threshold in @($strictSitelinksMin, $relaxedSitelinksMin)) {
   $emptyBatches = 0
 
-  for ($offset = 0; $offset -le $generalMaxOffset; $offset += $limit) {
-    $query = Build-GeneralQuery -Offset $offset -MinSitelinks $generalSitelinksMin
+  for ($offset = 0; $offset -le $maxOffset; $offset += $limit) {
+    $query = Build-KnownCreatorsQuery -Offset $offset -MinSitelinks $threshold
     $rows = Invoke-Sparql -Query $query
 
     if (-not $rows.Count) {
@@ -234,14 +185,16 @@ if ($store.Count -lt $targetCount) {
     $emptyBatches = 0
     Add-Rows -Store $store -Rows $rows
 
-    "general_offset=$offset fetched=$($rows.Count) unique=$($store.Count)" | Write-Output
+    "known_creators threshold=$threshold offset=$offset fetched=$($rows.Count) unique=$($store.Count)" | Write-Output
 
-    if ($store.Count -ge ($targetCount + 700) -and $offset -ge 6000) {
+    if ($store.Count -ge ($targetCount + 200) -and $offset -ge 3500) {
       break
     }
 
-    Start-Sleep -Milliseconds 350
+    Start-Sleep -Milliseconds 180
   }
+
+  if ($store.Count -ge $targetCount) { break }
 }
 
 $raw = $store.Values
@@ -252,8 +205,8 @@ if (-not $raw.Count) {
 $countryIds = $raw | Select-Object -ExpandProperty countryId -Unique
 $countryMeta = @{}
 
-for ($i = 0; $i -lt $countryIds.Count; $i += 45) {
-  $end = [Math]::Min($i + 44, $countryIds.Count - 1)
+for ($i = 0; $i -lt $countryIds.Count; $i += 80) {
+  $end = [Math]::Min($i + 79, $countryIds.Count - 1)
   $chunk = $countryIds[$i..$end]
 
   $response = Invoke-WikidataClaims -Ids $chunk
@@ -290,32 +243,11 @@ for ($i = 0; $i -lt $countryIds.Count; $i += 45) {
     }
   }
 
-  Start-Sleep -Milliseconds 150
-}
-
-$manualCountryOverride = @{
-  "Q615" = [pscustomobject]@{ countryName = "Argentina"; countryCode = "ar"; continent = "south-america" } # Lionel Messi
+  Start-Sleep -Milliseconds 80
 }
 
 $final = foreach ($row in $raw) {
   if ($row.name -match '^Q\d+$') { continue }
-
-  if ($manualCountryOverride.ContainsKey($row.id)) {
-    [pscustomobject]@{
-      id = $row.id
-      name = $row.name
-      image = $row.image
-      gender = $row.gender
-      continent = $manualCountryOverride[$row.id].continent
-      countryId = $row.countryId
-      countryName = $manualCountryOverride[$row.id].countryName
-      countryCode = $manualCountryOverride[$row.id].countryCode
-      score = 1200
-      sitelinks = $row.sitelinks
-    }
-    continue
-  }
-
   if (-not $countryMeta.ContainsKey($row.countryId)) { continue }
 
   [pscustomobject]@{
@@ -337,7 +269,18 @@ $final = $final |
   Where-Object { $_.countryCode -and $_.continent }
 
 $manualAdds = @(
-  [pscustomobject]@{ id='CUSTOM_CENTRAL_CEE'; name='Central Cee'; image='https://commons.wikimedia.org/wiki/Special:FilePath/Central%20Cee%20at%20Reading%20Festival%202022.jpg'; gender='male'; continent='europe'; countryId='Q145'; countryName='United Kingdom'; countryCode='gb'; score=1200; sitelinks=130 }
+  [pscustomobject]@{
+    id='CUSTOM_BAD_BUNNY'
+    name='Bad Bunny'
+    image='https://upload.wikimedia.org/wikipedia/commons/b/b1/Bad_Bunny_2019_by_Glenn_Francis_%28cropped%29.jpg'
+    gender='male'
+    continent='north-america'
+    countryId='Q1183'
+    countryName='Puerto Rico'
+    countryCode='pr'
+    score=1200
+    sitelinks=190
+  }
 )
 
 $existingByName = @{}
@@ -360,6 +303,10 @@ $contStats = $final | Group-Object continent | Sort-Object Name | ForEach-Object
 "total=$($final.Count)" | Write-Output
 "male=$((($final | Where-Object gender -eq 'male').Count)) female=$((($final | Where-Object gender -eq 'female').Count))" | Write-Output
 "continents=" + ($contStats -join ",") | Write-Output
-"min_sitelinks=$sitelinksMin" | Write-Output
-"general_min_sitelinks=$generalSitelinksMin" | Write-Output
+"strict_min_sitelinks=$strictSitelinksMin" | Write-Output
+"relaxed_min_sitelinks=$relaxedSitelinksMin" | Write-Output
+"max_age=$maxAge" | Write-Output
 "target=$targetCount" | Write-Output
+
+
+

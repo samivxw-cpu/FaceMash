@@ -477,6 +477,44 @@ body {
   margin: 2px 0;
 }
 
+.country-ranking-btn {
+  margin-top: 8px;
+  border: 1px solid #9f2016;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ca2d20, #a10f07);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.country-ranking-btn:hover {
+  background: linear-gradient(180deg, #da3a2c, #b4150b);
+}
+
+.country-ranking-panel {
+  margin-top: 10px;
+  border: 1px solid #d5cdc3;
+  border-radius: 10px;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.country-ranking-panel h4 {
+  margin: 0 0 8px;
+}
+
+.country-ranking-panel ol {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.country-ranking-panel li {
+  margin: 5px 0;
+}
+
+
 .profile-form {
   margin-top: 12px;
   display: grid;
@@ -752,3 +790,4 @@ body {
     height: 220px;
   }
 }
+

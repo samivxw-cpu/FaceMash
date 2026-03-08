@@ -1,4 +1,4 @@
-﻿const K = 32;
+const K = 32;
 const DEFAULT_SCORE = 1200;
 const AFRICA_MIN_TAB_COUNT = 300;
 const MAX_ACTIVE_PROFILES = 5000;
@@ -452,15 +452,78 @@ function renderFullRankings() {
   renderChampionCard("femaleChampion", "female");
 }
 
+function countryRankingPool(countryCode, gender = currentGender) {
+  return celebs
+    .filter((c) => c.countryCode === countryCode && c.gender === gender)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return (b.popularity || 0) - (a.popularity || 0);
+    });
+}
+
 function topForCountry(countryCode) {
-  const filteredByGender = celebs.filter((c) => c.countryCode === countryCode && c.gender === currentGender);
-  if (filteredByGender.length) {
-    return [...filteredByGender].sort((a, b) => b.score - a.score)[0];
+  const filteredByGender = countryRankingPool(countryCode, currentGender);
+  if (filteredByGender.length) return filteredByGender[0];
+
+  const fallback = celebs
+    .filter((c) => c.countryCode === countryCode)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return (b.popularity || 0) - (a.popularity || 0);
+    });
+
+  return fallback.length ? fallback[0] : null;
+}
+
+function hideCountryRanking() {
+  const panel = el("countryRankingPanel");
+  if (!panel) return;
+  panel.classList.add("hidden");
+}
+
+function renderCountryRanking(countryCode = selectedCountryCode) {
+  const panel = el("countryRankingPanel");
+  const title = el("countryRankingTitle");
+  const list = el("countryRankingList");
+  if (!panel || !title || !list || !countryCode) return;
+
+  const ranked = countryRankingPool(countryCode, currentGender);
+  const fallback = ranked.length
+    ? ranked
+    : celebs
+      .filter((c) => c.countryCode === countryCode)
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return (b.popularity || 0) - (a.popularity || 0);
+      });
+
+  if (!fallback.length) {
+    title.textContent = `${countryCode.toUpperCase()} - Aucun profil`;
+    list.innerHTML = "<li>Aucun profil disponible pour ce pays.</li>";
+    panel.classList.remove("hidden");
+    return;
   }
 
-  const fallback = celebs.filter((c) => c.countryCode === countryCode);
-  if (!fallback.length) return null;
-  return [...fallback].sort((a, b) => b.score - a.score)[0];
+  const display = fallback.slice(0, 10);
+  const countryName = fallback[0].countryName || countryCode.toUpperCase();
+  const flag = countryCodeToFlag(countryCode);
+  const genderLabel = currentGender === "male" ? "Men" : "Women";
+
+  title.textContent = `${flag} ${countryName} - Top ${display.length} ${genderLabel}`.trim();
+  list.innerHTML = "";
+
+  display.forEach((c, idx) => {
+    const li = document.createElement("li");
+    li.textContent = `${idx + 1}. ${c.name}`;
+    list.appendChild(li);
+  });
+
+  panel.classList.remove("hidden");
+}
+
+function showCountryRanking(countryCode) {
+  if (countryCode) selectedCountryCode = countryCode;
+  renderCountryRanking(selectedCountryCode);
 }
 
 function renderCountrySpotlight(countryCode) {
@@ -471,7 +534,8 @@ function renderCountrySpotlight(countryCode) {
   const top = topForCountry(countryCode);
 
   if (!top) {
-    card.innerHTML = `<p>No profile data for ${countryCode.toUpperCase()} yet.</p>`;
+    card.innerHTML = `<p>Aucun profil pour ${countryCode.toUpperCase()}.</p>`;
+    hideCountryRanking();
     return;
   }
 
@@ -481,12 +545,14 @@ function renderCountrySpotlight(countryCode) {
       <div class="spotlight-meta">
         <h4>${countryCodeToFlag(countryCode)} ${top.countryName || countryCode.toUpperCase()}</h4>
         <p><strong>${top.name}</strong></p>
-        <p>Top profile (${top.gender === "male" ? "Man" : "Woman"})</p>
+        <p>Top 1 (${top.gender === "male" ? "Men" : "Women"})</p>
+        <button type="button" class="country-ranking-btn" onclick="showCountryRanking('${countryCode}')">Voir le classement du pays</button>
       </div>
     </div>
   `;
-}
 
+  hideCountryRanking();
+}
 function updateMapValues() {
   if (!worldMap || !worldMap.series || !worldMap.series.regions || !worldMap.series.regions[0]) return;
 
@@ -921,19 +987,18 @@ function applyCountryOverrides(record) {
 function initCookieBanner() {
   const banner = el("cookie-banner");
   if (!banner) return;
+  banner.classList.remove("hidden");
   banner.style.display = "flex";
 }
 
 function acceptCookies() {
   const banner = el("cookie-banner");
   if (banner) banner.style.display = "none";
-  localStorage.setItem("cookiesAccepted", "true");
 }
 
 function rejectCookies() {
   const banner = el("cookie-banner");
   if (banner) banner.style.display = "none";
-  localStorage.setItem("cookiesAccepted", "rejected");
 }
 
 async function loadCelebs() {
@@ -1025,10 +1090,14 @@ window.rejectCookies = rejectCookies;
 window.setGender = setGender;
 window.setContinent = setContinent;
 window.vote = vote;
+window.showCountryRanking = showCountryRanking;
 
 document.addEventListener("DOMContentLoaded", () => {
   initCookieBanner();
   loadCelebs();
 });
+
+
+
 
 

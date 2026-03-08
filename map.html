@@ -1,24 +1,23 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FaceMash - World Map</title>
-  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260308f">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css?v=20260308f">
-  <link rel="stylesheet" href="style.css?v=20260308f">
+  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260308m">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css?v=20260308m">
+  <link rel="stylesheet" href="style.css?v=20260308m">
 </head>
 <body data-page="map">
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="battle.html" aria-label="FaceMash battle">
-        <img src="logo.svg?v=20260308f" alt="FaceMash logo" class="logo" width="40" height="40">
         <span>FaceMash</span>
       </a>
       <nav class="header-tabs" aria-label="Main navigation">
         <a class="tab-link" href="battle.html">Battle</a>
         <a class="tab-link" href="ranking.html">Ranking</a>
-        <a class="tab-link active-link" href="map.html">Map</a>
+        <a class="tab-link active-link" href="map.html">FaceMap</a>
       </nav>
     </div>
   </header>
@@ -26,7 +25,7 @@
   <main class="page">
     <section class="hero">
       <h1>Global FaceMap</h1>
-      <p class="subline">Click any country and see its top profile instantly.</p>
+      <p class="subline">Selectionnez un pays sur la carte.</p>
       <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
         <button type="button" id="modeMale" class="chip-btn" onclick="setGender('male')">Men</button>
         <button type="button" id="modeFemale" class="chip-btn" onclick="setGender('female')">Women</button>
@@ -37,7 +36,11 @@
     <section class="map-wrap">
       <div id="worldMap" class="world-map" aria-label="World map"></div>
       <article id="countrySpotlight" class="country-spotlight">
-        <p>Select a country on the map.</p>
+        <p>Selectionnez un pays sur la carte.</p>
+      </article>
+      <article id="countryRankingPanel" class="country-ranking-panel hidden">
+        <h4 id="countryRankingTitle">Classement du pays</h4>
+        <ol id="countryRankingList"></ol>
       </article>
     </section>
   </main>
@@ -58,6 +61,6 @@
     <a href="cookies.html">En savoir plus</a>
   </div>
 
-  <script src="script.js?v=20260308f" defer></script>
+  <script src="script.js?v=20260308m" defer></script>
 </body>
 </html>
