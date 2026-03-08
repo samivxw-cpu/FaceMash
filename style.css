@@ -752,3 +752,219 @@ body {
     height: 220px;
   }
 }
+
+/* Classic Facemash refresh */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #d7d7d7;
+  color: #111111;
+}
+
+.topbar {
+  position: static;
+  background: #8f1108;
+  border-top: 2px solid #5e0903;
+  border-bottom: 2px solid #5e0903;
+  box-shadow: none;
+}
+
+.topbar-inner {
+  max-width: 900px;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px 10px;
+}
+
+.brand {
+  gap: 0;
+}
+
+.brand span {
+  font-family: Arial, Helvetica, sans-serif;
+  text-transform: uppercase;
+  font-size: clamp(1.8rem, 5vw, 2.2rem);
+  letter-spacing: 0.03em;
+  font-weight: 700;
+}
+
+.logo {
+  display: none;
+}
+
+.header-tabs {
+  width: 100%;
+  justify-content: center;
+  gap: 12px;
+}
+
+.header-tabs .tab-link {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0;
+}
+
+.header-tabs .tab-link:hover {
+  background: transparent;
+  border-color: transparent;
+  transform: none;
+  text-decoration: underline;
+}
+
+.header-tabs .active-link {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  text-decoration: underline;
+}
+
+.page {
+  max-width: 900px;
+  background: #ffffff;
+  border-left: 1px solid #9f9f9f;
+  border-right: 1px solid #9f9f9f;
+  border-bottom: 1px solid #9f9f9f;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+.hero {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 8px 8px 4px;
+  background: #ffffff;
+}
+
+.hero h1 {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(1.7rem, 5vw, 2rem);
+  letter-spacing: 0;
+  font-weight: 700;
+}
+
+.subline {
+  margin-top: 6px;
+  color: #2b2b2b;
+  font-weight: 700;
+}
+
+.home-intro-line {
+  display: none;
+}
+
+body.battle-classic .filter-tabs {
+  margin-top: 8px;
+  gap: 8px;
+}
+
+body.battle-classic .chip-btn {
+  border: 1px solid #999999;
+  color: #333333;
+  background: #f4f4f4;
+  padding: 4px 8px;
+}
+
+body.battle-classic .chip-btn:hover {
+  color: #111111;
+  text-decoration: none;
+  background: #eeeeee;
+}
+
+body.battle-classic .chip-btn.active {
+  color: #ffffff;
+  background: #8f1108;
+  border-color: #5e0903;
+  text-decoration: none;
+}
+
+body.battle-classic .status {
+  margin-top: 8px;
+}
+
+body.battle-classic .battle {
+  margin-top: 4px;
+  grid-template-columns: minmax(0, 250px) 34px minmax(0, 250px);
+  justify-content: center;
+}
+
+body.battle-classic .face-card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+}
+
+body.battle-classic .face-card:hover {
+  transform: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+body.battle-classic .face-card img {
+  height: 315px;
+  border: 1px solid #909090;
+  border-radius: 0;
+  background: #f1f1f1;
+  object-fit: cover;
+}
+
+body.battle-classic .face-card h2,
+body.battle-classic .country-line {
+  display: none;
+}
+
+body.battle-classic .versus {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+body.battle-classic .classic-links {
+  margin-top: 6px;
+  gap: 10px;
+}
+
+body.battle-classic .classic-links a {
+  font-size: 0.72rem;
+  color: #4a4a4a;
+  text-transform: uppercase;
+}
+
+body.battle-classic .site-footer {
+  margin-top: 0;
+  border-top: 0;
+  background: transparent;
+}
+
+body.battle-classic .footer-inner {
+  max-width: 900px;
+  background: #ffffff;
+  border-left: 1px solid #9f9f9f;
+  border-right: 1px solid #9f9f9f;
+  border-bottom: 1px solid #9f9f9f;
+  color: #5a5a5a;
+  min-height: 40px;
+  font-size: 0.72rem;
+}
+
+body.battle-classic .footer-inner a {
+  color: #5a5a5a;
+}
+
+@media (max-width: 980px) {
+  body.battle-classic .battle {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.battle-classic .face-card img {
+    height: 280px;
+    object-fit: contain;
+  }
+}

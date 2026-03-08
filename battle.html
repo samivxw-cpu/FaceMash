@@ -1,18 +1,16 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FaceMash - Battle</title>
-  <link rel="icon" type="image/svg+xml" href="logo.svg?v=20260308f">
-  <link rel="stylesheet" href="style.css?v=20260308f">
+  <link rel="stylesheet" href="style.css?v=20260308g">
 </head>
-<body data-page="battle">
+<body data-page="battle" class="battle-classic">
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="battle.html" aria-label="FaceMash battle">
-        <img src="logo.svg?v=20260308f" alt="FaceMash logo" class="logo" width="40" height="40">
-        <span>FaceMash</span>
+        <span>FACEMASH</span>
       </a>
       <nav class="header-tabs" aria-label="Main navigation">
         <a class="tab-link active-link" href="battle.html">Battle</a>
@@ -24,8 +22,7 @@
 
   <main class="page">
     <section class="hero">
-      <p class="home-intro-line">Were we let in for our looks? No. Will we be judged on them? Yes.</p>
-      <h1>Who's Better? Click to Choose.</h1>
+      <h1>Who's Hotter? Click to Choose.</h1>
       <p class="subline" id="questionLine">Who is more handsome, left or right?</p>
       <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
         <button type="button" id="modeMale" class="chip-btn" onclick="setGender('male')">Men</button>
@@ -49,16 +46,13 @@
       </article>
     </section>
 
-    <section class="rankings">
-      <article class="ranking-panel">
-        <h3 id="maleTopTitle">Top 10 Men</h3>
-        <ol id="rankingMaleTop"></ol>
-      </article>
-      <article class="ranking-panel">
-        <h3 id="femaleTopTitle">Top 10 Women</h3>
-        <ol id="rankingFemaleTop"></ol>
-      </article>
-    </section>
+    <nav class="classic-links" aria-label="Classic navigation">
+      <a href="battle.html">Home</a>
+      <a href="ranking.html">Ranking</a>
+      <a href="map.html">Map</a>
+      <a href="authors.html">About</a>
+      <a href="cookies.html">Legal</a>
+    </nav>
   </main>
 
   <footer class="site-footer">
@@ -77,6 +71,6 @@
     <a href="cookies.html">En savoir plus</a>
   </div>
 
-  <script src="script.js?v=20260308f" defer></script>
+  <script src="script.js?v=20260308g" defer></script>
 </body>
 </html>
