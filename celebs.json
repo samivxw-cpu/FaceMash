@@ -37,7 +37,7 @@
     },
     {
         "id":  "Q36153",
-        "name":  "Beyoncé",
+        "name":  "BeyoncÃ©",
         "image":  "https://commons.wikimedia.org/wiki/Special:FilePath/Beyonc%C3%A9%20-%20Tottenham%20Hotspur%20Stadium%20-%201st%20June%202023%20%2810%20of%20118%29%20%2852946364598%29%20%28best%20crop%29.jpg",
         "gender":  "female",
         "continent":  "north-america",
@@ -349,7 +349,7 @@
     },
     {
         "id":  "Q27655344",
-        "name":  "Rosé",
+        "name":  "RosÃ©",
         "image":  "https://commons.wikimedia.org/wiki/Special:FilePath/Blackpink%20Ros%C3%A9%20Rimowa%201.jpg",
         "gender":  "female",
         "continent":  "oceania",
@@ -533,9 +533,9 @@
         "image":  "https://commons.wikimedia.org/wiki/Special:FilePath/Daddy%20Yankee%20-%20The%20Kingdom%20%28Official%20Q%20%26%20A%29.png",
         "gender":  "male",
         "continent":  "north-america",
-        "countryId":  "",
-        "countryName":  "",
-        "countryCode":  "",
+        "countryId":  "Q1183",
+        "countryName":  "Puerto Rico",
+        "countryCode":  "pr",
         "score":  1200,
         "sitelinks":  37
     },
