@@ -753,126 +753,159 @@ body {
   }
 }
 
-/* Classic Facemash refresh */
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #d7d7d7;
-  color: #111111;
+/* Battle full-page redesign */
+.tab-link,
+.chip-btn,
+.load-more,
+.cookie-banner button,
+.cookie-banner a {
+  border-radius: 0;
 }
 
-.topbar {
-  position: static;
+body.battle-classic {
+  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(180deg, #e8e8e8 0%, #d7d7d7 100%);
+  color: #111111;
+  min-height: 100vh;
+}
+
+body.battle-classic .topbar {
+  position: sticky;
+  top: 0;
   background: #8f1108;
   border-top: 2px solid #5e0903;
   border-bottom: 2px solid #5e0903;
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.topbar-inner {
-  max-width: 900px;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px 12px 10px;
+body.battle-classic .topbar-inner {
+  max-width: none;
+  width: 100%;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 24px;
+  flex-wrap: nowrap;
 }
 
-.brand {
+body.battle-classic .brand {
   gap: 0;
 }
 
-.brand span {
+body.battle-classic .brand span {
   font-family: Arial, Helvetica, sans-serif;
   text-transform: uppercase;
-  font-size: clamp(1.8rem, 5vw, 2.2rem);
-  letter-spacing: 0.03em;
+  font-size: clamp(2rem, 4.2vw, 2.5rem);
+  letter-spacing: 0.04em;
   font-weight: 700;
 }
 
-.logo {
+body.battle-classic .logo {
   display: none;
 }
 
-.header-tabs {
-  width: 100%;
-  justify-content: center;
-  gap: 12px;
+body.battle-classic .header-tabs {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-.header-tabs .tab-link {
-  border: 0;
+body.battle-classic .header-tabs .tab-link {
+  border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: 0;
   background: transparent;
   color: #ffffff;
-  font-size: 0.78rem;
-  font-weight: 700;
   text-transform: uppercase;
-  padding: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
 }
 
-.header-tabs .tab-link:hover {
-  background: transparent;
-  border-color: transparent;
+body.battle-classic .header-tabs .tab-link:hover {
+  border-color: #ffffff;
+  text-decoration: none;
   transform: none;
-  text-decoration: underline;
 }
 
-.header-tabs .active-link {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-  text-decoration: underline;
-}
-
-.page {
-  max-width: 900px;
+body.battle-classic .header-tabs .active-link {
   background: #ffffff;
-  border-left: 1px solid #9f9f9f;
-  border-right: 1px solid #9f9f9f;
-  border-bottom: 1px solid #9f9f9f;
-  margin: 0 auto;
-  padding: 12px;
+  color: #7f0c05;
+  border-color: #ffffff;
+  box-shadow: none;
+  text-decoration: none;
 }
 
-.hero {
+body.battle-classic .headline-banner {
+  background: #f3e8e6;
+  border-bottom: 1px solid #c8b6b2;
+  border-top: 1px solid #e0d0cc;
+  padding: 8px 24px;
+  text-align: center;
+}
+
+body.battle-classic .headline-banner p {
+  margin: 0;
+  color: #6b120b;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+body.battle-classic .page {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 20px 24px 16px;
+  border: 0;
+  background: transparent;
+}
+
+body.battle-classic .hero {
   border: 0;
   border-radius: 0;
   box-shadow: none;
-  padding: 8px 8px 4px;
-  background: #ffffff;
+  background: transparent;
+  padding: 0;
+  text-align: center;
 }
 
-.hero h1 {
+body.battle-classic .hero h1 {
+  margin: 0;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: clamp(1.7rem, 5vw, 2rem);
-  letter-spacing: 0;
-  font-weight: 700;
+  font-size: clamp(2rem, 4.5vw, 2.8rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #111111;
 }
 
-.subline {
+body.battle-classic .subline {
   margin-top: 6px;
-  color: #2b2b2b;
+  color: #2f2f2f;
+  font-size: 1.03rem;
   font-weight: 700;
-}
-
-.home-intro-line {
-  display: none;
 }
 
 body.battle-classic .filter-tabs {
-  margin-top: 8px;
+  margin-top: 10px;
   gap: 8px;
+  justify-content: center;
 }
 
 body.battle-classic .chip-btn {
-  border: 1px solid #999999;
-  color: #333333;
-  background: #f4f4f4;
-  padding: 4px 8px;
+  border: 1px solid #7f7f7f;
+  border-radius: 0;
+  color: #1f1f1f;
+  background: #f1f1f1;
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 body.battle-classic .chip-btn:hover {
   color: #111111;
+  background: #e9e9e9;
   text-decoration: none;
-  background: #eeeeee;
 }
 
 body.battle-classic .chip-btn.active {
@@ -880,6 +913,7 @@ body.battle-classic .chip-btn.active {
   background: #8f1108;
   border-color: #5e0903;
   text-decoration: none;
+  box-shadow: none;
 }
 
 body.battle-classic .status {
@@ -887,54 +921,79 @@ body.battle-classic .status {
 }
 
 body.battle-classic .battle {
-  margin-top: 4px;
-  grid-template-columns: minmax(0, 250px) 34px minmax(0, 250px);
-  justify-content: center;
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
 }
 
 body.battle-classic .face-card {
-  border: 0;
+  border: 1px solid #8e8e8e;
   border-radius: 0;
   box-shadow: none;
-  background: transparent;
-  padding: 0;
+  background: #ffffff;
+  padding: 10px;
+  cursor: pointer;
 }
 
 body.battle-classic .face-card:hover {
   transform: none;
-  border-color: transparent;
+  border-color: #7f0c05;
   box-shadow: none;
 }
 
 body.battle-classic .face-card img {
-  height: 315px;
-  border: 1px solid #909090;
+  width: 100%;
+  height: clamp(360px, 67vh, 760px);
+  object-fit: cover;
+  border: 1px solid #b8b8b8;
   border-radius: 0;
   background: #f1f1f1;
-  object-fit: cover;
 }
 
-body.battle-classic .face-card h2,
+body.battle-classic .face-card h2 {
+  margin: 10px 0 2px;
+  text-align: center;
+  font-size: 1.08rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 body.battle-classic .country-line {
-  display: none;
+  margin: 0;
+  text-align: center;
+  color: #5f5f5f;
+  font-size: 0.89rem;
 }
 
 body.battle-classic .versus {
+  text-align: center;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #6b120b;
+  letter-spacing: 0.03em;
 }
 
 body.battle-classic .classic-links {
-  margin-top: 6px;
-  gap: 10px;
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 body.battle-classic .classic-links a {
-  font-size: 0.72rem;
-  color: #4a4a4a;
+  color: #4b4b4b;
+  text-decoration: none;
+  font-size: 0.76rem;
   text-transform: uppercase;
+  border-bottom: 1px solid transparent;
+}
+
+body.battle-classic .classic-links a:hover {
+  border-bottom-color: #4b4b4b;
 }
 
 body.battle-classic .site-footer {
@@ -944,27 +1003,73 @@ body.battle-classic .site-footer {
 }
 
 body.battle-classic .footer-inner {
-  max-width: 900px;
-  background: #ffffff;
-  border-left: 1px solid #9f9f9f;
-  border-right: 1px solid #9f9f9f;
-  border-bottom: 1px solid #9f9f9f;
-  color: #5a5a5a;
-  min-height: 40px;
+  max-width: none;
+  min-height: 36px;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 24px 10px;
   font-size: 0.72rem;
+  color: #555555;
+  background: transparent;
 }
 
 body.battle-classic .footer-inner a {
-  color: #5a5a5a;
+  color: #555555;
+}
+
+body.battle-classic .cookie-banner {
+  border-radius: 0;
 }
 
 @media (max-width: 980px) {
+  body.battle-classic .topbar-inner {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  body.battle-classic .header-tabs {
+    justify-content: center;
+    width: 100%;
+  }
+
+  body.battle-classic .headline-banner {
+    padding: 8px 12px;
+  }
+
+  body.battle-classic .page {
+    padding: 16px 10px 12px;
+  }
+
   body.battle-classic .battle {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  body.battle-classic .face-card {
+    padding: 6px;
   }
 
   body.battle-classic .face-card img {
-    height: 280px;
+    height: clamp(260px, 52vh, 520px);
+  }
+
+  body.battle-classic .versus {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 700px) {
+  body.battle-classic .battle {
+    grid-template-columns: 1fr;
+  }
+
+  body.battle-classic .versus {
+    display: none;
+  }
+
+  body.battle-classic .face-card img {
+    height: clamp(260px, 50vh, 420px);
     object-fit: contain;
   }
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FaceMash - Battle</title>
-  <link rel="stylesheet" href="style.css?v=20260308g">
+  <link rel="stylesheet" href="style.css?v=20260308h">
 </head>
 <body data-page="battle" class="battle-classic">
   <header class="topbar">
@@ -20,10 +20,14 @@
     </div>
   </header>
 
+  <div class="headline-banner" role="note">
+    <p>Live community voting. Rankings update after every match.</p>
+  </div>
+
   <main class="page">
     <section class="hero">
-      <h1>Who's Hotter? Click to Choose.</h1>
-      <p class="subline" id="questionLine">Who is more handsome, left or right?</p>
+      <h1>Pick the Profile You Prefer</h1>
+      <p class="subline" id="questionLine">Which profile do you prefer, left or right?</p>
       <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
         <button type="button" id="modeMale" class="chip-btn" onclick="setGender('male')">Men</button>
         <button type="button" id="modeFemale" class="chip-btn" onclick="setGender('female')">Women</button>
@@ -38,7 +42,7 @@
         <h2 id="nameLeft">-</h2>
         <p id="countryLeft" class="country-line"></p>
       </article>
-      <div class="versus">OR</div>
+      <div class="versus">VS</div>
       <article class="face-card" onclick="vote('right')">
         <img id="imgRight" alt="Right profile" loading="lazy">
         <h2 id="nameRight">-</h2>
@@ -57,7 +61,7 @@
 
   <footer class="site-footer">
     <div class="footer-inner">
-      <span>FaceMash</span>
+      <span>FACEMASH</span>
       <a href="cookies.html">Cookies & Legal</a>
       <a href="authors.html">Authors</a>
       <span>Created in 2026</span>
@@ -71,6 +75,6 @@
     <a href="cookies.html">En savoir plus</a>
   </div>
 
-  <script src="script.js?v=20260308g" defer></script>
+  <script src="script.js?v=20260308h" defer></script>
 </body>
 </html>

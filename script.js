@@ -1,4 +1,7 @@
-﻿const K = 32;
+const BASE_K = 30;
+const MIN_K = 18;
+const MAX_K = 44;
+const MATCH_SPREAD = 260;
 const DEFAULT_SCORE = 1200;
 const AFRICA_MIN_TAB_COUNT = 300;
 const MAX_ACTIVE_PROFILES = 5000;
@@ -82,16 +85,34 @@ function has(id) {
   return Boolean(el(id));
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function expectedScore(a, b) {
   return 1 / (1 + Math.pow(10, (b - a) / 400));
+}
+
+function dynamicK(playerA, playerB) {
+  const votesA = playerA.votes || 0;
+  const votesB = playerB.votes || 0;
+  const avgVotes = (votesA + votesB) / 2;
+  const uncertainty = 1 - clamp(avgVotes / 70, 0, 1);
+
+  const scoreGap = Math.abs((playerA.score || DEFAULT_SCORE) - (playerB.score || DEFAULT_SCORE));
+  const spreadFactor = clamp(1 - (scoreGap / 1400), 0.72, 1);
+
+  const k = (BASE_K + uncertainty * (MAX_K - BASE_K)) * spreadFactor;
+  return Math.round(clamp(k, MIN_K, MAX_K));
 }
 
 function updateElo(winner, loser) {
   const expectedWinner = expectedScore(winner.score, loser.score);
   const expectedLoser = expectedScore(loser.score, winner.score);
+  const kFactor = dynamicK(winner, loser);
 
-  winner.score = Math.round(winner.score + K * (1 - expectedWinner));
-  loser.score = Math.round(loser.score + K * (0 - expectedLoser));
+  winner.score = Math.round(winner.score + kFactor * (1 - expectedWinner));
+  loser.score = Math.round(loser.score + kFactor * (0 - expectedLoser));
   winner.votes = (winner.votes || 0) + 1;
   loser.votes = (loser.votes || 0) + 1;
 }
@@ -172,9 +193,7 @@ function wasPairRecentlyUsed(a, b) {
 function updateQuestionLine() {
   const line = el("questionLine");
   if (!line) return;
-  line.textContent = currentGender === "male"
-    ? "Who is more handsome, left or right?"
-    : "Who is more beautiful, left or right?";
+  line.textContent = "Which profile do you prefer, left or right?";
 }
 
 function updateModeButtons() {
@@ -245,7 +264,45 @@ function markShown(person) {
   rememberId(person.id);
 }
 
-function pickCandidate(pool, excludeIds = []) {
+function weightedPick(candidates, weightFn) {
+  if (!candidates.length) return null;
+
+  let total = 0;
+  const weighted = candidates.map((candidate, index) => {
+    const rawWeight = Number(weightFn(candidate, index));
+    const weight = Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : 0.001;
+    total += weight;
+    return { candidate, weight };
+  });
+
+  if (total <= 0) {
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  let draw = Math.random() * total;
+  for (const item of weighted) {
+    draw -= item.weight;
+    if (draw <= 0) return item.candidate;
+  }
+
+  return weighted[weighted.length - 1].candidate;
+}
+
+function noveltyScore(profile) {
+  const shown = profile.shown || 0;
+  const votes = profile.votes || 0;
+  const shownWeight = clamp((14 - shown) / 14, 0.1, 1);
+  const voteWeight = clamp((24 - votes) / 24, 0.1, 1);
+  return (shownWeight * 0.65) + (voteWeight * 0.35);
+}
+
+function ratingProximityWeight(a, b) {
+  if (!a || !b) return 1;
+  const gap = Math.abs((a.score || DEFAULT_SCORE) - (b.score || DEFAULT_SCORE));
+  return Math.exp(-(gap / MATCH_SPREAD));
+}
+
+function pickCandidate(pool, excludeIds = [], anchor = null) {
   if (!pool.length) return null;
 
   const exclude = new Set(excludeIds.filter(Boolean));
@@ -253,23 +310,16 @@ function pickCandidate(pool, excludeIds = []) {
   if (!candidates.length) return null;
 
   const nonRecent = candidates.filter((p) => !recentIds.includes(p.id));
-  if (nonRecent.length >= 10) candidates = nonRecent;
+  if (nonRecent.length >= Math.min(24, Math.ceil(pool.length * 0.2))) {
+    candidates = nonRecent;
+  }
 
-  candidates.sort((a, b) => {
-    const shownA = a.shown || 0;
-    const shownB = b.shown || 0;
-    if (shownA !== shownB) return shownA - shownB;
-
-    const votesA = a.votes || 0;
-    const votesB = b.votes || 0;
-    if (votesA !== votesB) return votesA - votesB;
-
-    return (b.popularity || 0) - (a.popularity || 0);
+  return weightedPick(candidates, (candidate) => {
+    const novelty = noveltyScore(candidate);
+    const popularityBoost = 1 + clamp((candidate.popularity || 0) / 180, 0, 0.8);
+    const proximityBoost = anchor ? (0.35 + 0.65 * ratingProximityWeight(anchor, candidate)) : 1;
+    return novelty * popularityBoost * proximityBoost;
   });
-
-  const windowSize = Math.min(40, candidates.length);
-  const shortList = candidates.slice(0, windowSize);
-  return shortList[Math.floor(Math.random() * shortList.length)];
 }
 
 function clearBattle() {
@@ -317,7 +367,7 @@ function chooseTwoProfiles(pool) {
     const first = pickCandidate(pool, recentIds);
     if (!first) break;
 
-    const second = pickCandidate(pool, [first.id, ...recentIds]);
+    const second = pickCandidate(pool, [first.id, ...recentIds], first);
     if (!second) continue;
 
     if (!wasPairRecentlyUsed(first, second)) {
@@ -325,12 +375,9 @@ function chooseTwoProfiles(pool) {
     }
   }
 
-  const randomA = pool[Math.floor(Math.random() * pool.length)];
-  let randomB = pool[Math.floor(Math.random() * pool.length)];
-  while (randomB && randomA && randomB.id === randomA.id) {
-    randomB = pool[Math.floor(Math.random() * pool.length)];
-  }
-  return [randomA, randomB];
+  const fallbackA = pickCandidate(pool, []);
+  const fallbackB = fallbackA ? pickCandidate(pool, [fallbackA.id], fallbackA) : null;
+  return [fallbackA, fallbackB];
 }
 
 function startFreshRound() {
@@ -358,12 +405,12 @@ function pickChallenger(winner) {
   if (pool.length < 2 || !winner) return null;
 
   for (let i = 0; i < 30; i += 1) {
-    const candidate = pickCandidate(pool, [winner.id, ...recentIds]);
+    const candidate = pickCandidate(pool, [winner.id, ...recentIds], winner);
     if (!candidate) continue;
     if (!wasPairRecentlyUsed(candidate, winner)) return candidate;
   }
 
-  return pickCandidate(pool, [winner.id]);
+  return pickCandidate(pool, [winner.id], winner);
 }
 
 function continueRoundKeepingWinner(side) {
@@ -1030,5 +1077,3 @@ document.addEventListener("DOMContentLoaded", () => {
   initCookieBanner();
   loadCelebs();
 });
-
-
