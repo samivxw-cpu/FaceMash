@@ -1,7 +1,8 @@
-const K = 32;
+﻿const K = 32;
 const DEFAULT_SCORE = 1200;
 const AFRICA_MIN_TAB_COUNT = 300;
 const MAX_ACTIVE_PROFILES = 5000;
+const MIN_FAME_SCORE = 45;
 const FALLBACK_IMG = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
 const MAX_RECENT_IDS = 48;
 const MAX_RECENT_PAIRS = 320;
@@ -936,7 +937,7 @@ function rejectCookies() {
 }
 
 async function loadCelebs() {
-  const needsData = has("battle") || has("rankingMaleFull") || has("worldMap") || has("profileCountry") || has("modeMale");
+  const needsData = has("battle") || has("rankingMaleFull") || has("worldMap") || has("modeMale");
   if (!needsData) return;
 
   try {
@@ -946,7 +947,7 @@ async function loadCelebs() {
     const raw = await response.json();
     const seen = new Set();
 
-    celebs = raw
+    const parsedCelebs = raw
       .map((item, index) => {
         const gender = normalizeGender(item.gender);
         const continent = normalizeContinent(item.continent || item.region || item.continentLabel);
@@ -978,6 +979,9 @@ async function loadCelebs() {
       })
       .filter(Boolean)
       .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+
+    const highFame = parsedCelebs.filter((c) => (c.popularity || 0) >= MIN_FAME_SCORE);
+    celebs = highFame.length >= 700 ? highFame : parsedCelebs;
 
     if (celebs.length > MAX_ACTIVE_PROFILES) {
       celebs = celebs.slice(0, MAX_ACTIVE_PROFILES);
@@ -1026,3 +1030,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initCookieBanner();
   loadCelebs();
 });
+
+

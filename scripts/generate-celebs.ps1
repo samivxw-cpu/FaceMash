@@ -1,10 +1,12 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 $userAgent = @{ "User-Agent" = "facemash-bot/2026 (known living global profiles)" }
-$targetCount = 8000
+$targetCount = 5000
 $limit = 900
 $maxOffset = 54000
-$sitelinksMin = 20
+$sitelinksMin = 45
+$generalSitelinksMin = 70
+$generalMaxOffset = 72000
 
 $continentByQid = @{
   "Q15" = "africa"
@@ -109,6 +111,36 @@ OFFSET $Offset
 "@
 }
 
+function Build-GeneralQuery {
+  param(
+    [int]$Offset,
+    [int]$MinSitelinks
+  )
+
+@"
+SELECT DISTINCT ?item ?itemLabel ?image ?country ?countryLabel ?gender ?sitelinks WHERE {
+  VALUES ?gender { wd:Q6581097 wd:Q6581072 }
+
+  ?item wdt:P31 wd:Q5;
+        wdt:P21 ?gender;
+        wdt:P18 ?image;
+        wdt:P27 ?country;
+        wikibase:sitelinks ?sitelinks.
+
+  FILTER(?sitelinks >= $MinSitelinks)
+  FILTER NOT EXISTS { ?item wdt:P570 ?deathDate. }
+
+  ?article schema:about ?item;
+           schema:isPartOf <https://en.wikipedia.org/>.
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+ORDER BY DESC(?sitelinks)
+LIMIT $limit
+OFFSET $Offset
+"@
+}
+
 function Add-Rows {
   param([System.Collections.Generic.Dictionary[string, object]]$Store, [array]$Rows)
 
@@ -184,6 +216,32 @@ for ($offset = 0; $offset -le $maxOffset; $offset += $limit) {
   }
 
   Start-Sleep -Milliseconds 400
+}
+
+if ($store.Count -lt $targetCount) {
+  $emptyBatches = 0
+
+  for ($offset = 0; $offset -le $generalMaxOffset; $offset += $limit) {
+    $query = Build-GeneralQuery -Offset $offset -MinSitelinks $generalSitelinksMin
+    $rows = Invoke-Sparql -Query $query
+
+    if (-not $rows.Count) {
+      $emptyBatches += 1
+      if ($emptyBatches -ge 2) { break }
+      continue
+    }
+
+    $emptyBatches = 0
+    Add-Rows -Store $store -Rows $rows
+
+    "general_offset=$offset fetched=$($rows.Count) unique=$($store.Count)" | Write-Output
+
+    if ($store.Count -ge ($targetCount + 700) -and $offset -ge 6000) {
+      break
+    }
+
+    Start-Sleep -Milliseconds 350
+  }
 }
 
 $raw = $store.Values
@@ -303,5 +361,5 @@ $contStats = $final | Group-Object continent | Sort-Object Name | ForEach-Object
 "male=$((($final | Where-Object gender -eq 'male').Count)) female=$((($final | Where-Object gender -eq 'female').Count))" | Write-Output
 "continents=" + ($contStats -join ",") | Write-Output
 "min_sitelinks=$sitelinksMin" | Write-Output
+"general_min_sitelinks=$generalSitelinksMin" | Write-Output
 "target=$targetCount" | Write-Output
-
