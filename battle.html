@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FaceMash - Battle</title>
-  <link rel="stylesheet" href="style.css?v=20260308i">
+  <link rel="stylesheet" href="style.css?v=20260308j">
 </head>
 <body data-page="battle" class="battle-classic">
   <header class="topbar">
@@ -21,13 +21,29 @@
   </header>
 
   <div class="headline-banner" role="note">
-    <p>Vote between two public profiles. Live ranking updates after each vote.</p>
+    <p>Arrow Left or Arrow Right to vote fast. Rankings refresh live.</p>
   </div>
 
-  <main class="page">
+  <main class="page battle-layout">
     <section class="hero">
-      <h1>FaceMash Battle</h1>
+      <h1>Battle Arena</h1>
       <p class="subline" id="questionLine">Which profile wins this round?</p>
+
+      <div class="battle-stats" aria-label="Battle stats">
+        <article class="stat-card">
+          <span class="stat-label">Active Pool</span>
+          <strong id="statsPool">-</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Total Votes</span>
+          <strong id="statsVotes">-</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Current Mode</span>
+          <strong id="statsMode">-</strong>
+        </article>
+      </div>
+
       <div class="filter-tabs" role="tablist" aria-label="Gender tabs">
         <button type="button" id="modeMale" class="chip-btn" onclick="setGender('male')">Men</button>
         <button type="button" id="modeFemale" class="chip-btn" onclick="setGender('female')">Women</button>
@@ -37,14 +53,25 @@
     </section>
 
     <section class="battle" id="battle">
-      <article class="face-card" onclick="vote('left')">
-        <img id="imgLeft" alt="Left profile" loading="lazy">
+      <article class="face-card" onclick="vote('left')" role="button" tabindex="0" aria-label="Vote left profile">
+        <div class="face-media">
+          <img id="imgLeft" alt="Left profile" loading="lazy">
+          <span class="vote-hint">Vote Left</span>
+        </div>
         <h2 id="nameLeft">-</h2>
         <p id="countryLeft" class="country-line"></p>
       </article>
-      <div class="versus">VS</div>
-      <article class="face-card" onclick="vote('right')">
-        <img id="imgRight" alt="Right profile" loading="lazy">
+
+      <div class="versus">
+        <span>VS</span>
+        <small>Choose one</small>
+      </div>
+
+      <article class="face-card" onclick="vote('right')" role="button" tabindex="0" aria-label="Vote right profile">
+        <div class="face-media">
+          <img id="imgRight" alt="Right profile" loading="lazy">
+          <span class="vote-hint">Vote Right</span>
+        </div>
         <h2 id="nameRight">-</h2>
         <p id="countryRight" class="country-line"></p>
       </article>
@@ -75,6 +102,7 @@
     <a href="cookies.html">En savoir plus</a>
   </div>
 
-  <script src="script.js?v=20260308i" defer></script>
+  <script src="script.js?v=20260308j" defer></script>
 </body>
 </html>
+

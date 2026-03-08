@@ -196,6 +196,29 @@ function updateQuestionLine() {
   line.textContent = "Which profile wins this round?";
 }
 
+function formatCount(value) {
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function getTotalVotesCount() {
+  const voteSum = celebs.reduce((sum, person) => sum + (person.votes || 0), 0);
+  return Math.floor(voteSum / 2);
+}
+
+function updateBattleStats() {
+  const poolEl = el("statsPool");
+  const votesEl = el("statsVotes");
+  const modeEl = el("statsMode");
+
+  if (poolEl) poolEl.textContent = formatCount(getPool().length);
+  if (votesEl) votesEl.textContent = formatCount(getTotalVotesCount());
+  if (modeEl) {
+    const modeGender = currentGender === "male" ? "Men" : "Women";
+    const modeContinent = CONTINENT_LABEL[currentContinent] || "World";
+    modeEl.textContent = `${modeGender} - ${modeContinent}`;
+  }
+}
+
 function updateModeButtons() {
   const male = el("modeMale");
   const female = el("modeFemale");
@@ -387,6 +410,7 @@ function startFreshRound() {
   updateContinentButtons();
 
   const pool = getPool();
+  updateBattleStats();
   if (pool.length < 2) {
     setStatus("Not enough profiles for this mode.");
     clearBattle();
@@ -916,6 +940,7 @@ function setGender(gender) {
   updateModeButtons();
   updateQuestionLine();
   updateContinentButtons();
+  updateBattleStats();
 
   updateTopRankings();
   renderFullRankings();
@@ -928,6 +953,7 @@ function setContinent(continent) {
   currentContinent = continent;
   ensureValidContinentForGender();
   updateContinentButtons();
+  updateBattleStats();
 
   updateTopRankings();
   renderFullRankings();
@@ -950,10 +976,28 @@ function vote(side) {
 
   updateTopRankings();
   renderFullRankings();
+  updateBattleStats();
 
   if (has("worldMap") && selectedCountryCode) {
     renderCountrySpotlight(selectedCountryCode);
   }
+}
+
+function initBattleHotkeys() {
+  if (!has("battle")) return;
+
+  document.addEventListener("keydown", (event) => {
+    const targetTag = event.target && event.target.tagName ? String(event.target.tagName).toUpperCase() : "";
+    if (["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(targetTag)) return;
+
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      vote("left");
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      vote("right");
+    }
+  });
 }
 
 function applyCountryOverrides(record) {
@@ -1046,6 +1090,7 @@ async function loadCelebs() {
     renderContinentTabs();
     updateModeButtons();
     updateQuestionLine();
+    updateBattleStats();
     updateTopRankings();
     renderFullRankings();
 
@@ -1075,5 +1120,7 @@ window.vote = vote;
 
 document.addEventListener("DOMContentLoaded", () => {
   initCookieBanner();
+  initBattleHotkeys();
   loadCelebs();
 });
+
